@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix منصة EduZone التعليمية | EduZone",
+  "description": "منصة EduZone التعليمية الشاملة للثانوية العامة والدبلومات الفنية والدورات الجامعية وبنك الأسئلة التفاعلي",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

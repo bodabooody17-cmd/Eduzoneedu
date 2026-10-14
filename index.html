@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta name="description" content="Eduzone التعليميه - المنصة الشاملة للثانوية العامة والدبلومات الفنية والدورات الجامعية وبنك الأسئلة" />
+    <meta property="og:title" content="Eduzone التعليميه" />
+    <meta property="og:description" content="Eduzone التعليميه - المنصة الشاملة للثانوية العامة والدبلومات الفنية والدورات الجامعية وبنك الأسئلة" />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#020617" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="EduZone" />
+    <meta name="application-name" content="EduZone" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/pwa-192x192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      // Gracefully handle OneSignal domain mismatch on non-production/preview URLs
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && (
+          (typeof event.reason.message === 'string' && event.reason.message.includes('Can only be used on')) ||
+          (typeof event.reason === 'string' && event.reason.includes('Can only be used on'))
+        )) {
+          event.preventDefault();
+          console.warn('[OneSignal] SDK origin notice:', event.reason?.message || event.reason);
+        }
+      });
+
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.init({
+            appId: "89883b4e-3e4e-4f53-92e8-8e20fc1fdc66",
+            notifyButton: {
+              enable: false,
+            },
+            allowLocalhostAsSecureOrigin: true,
+          });
+        } catch (err) {
+          console.warn('[OneSignal] Initialization skipped on current origin:', err?.message || err);
+        }
+      });
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden w-full max-w-full">
+    <div id="root" class="w-full max-w-full overflow-x-hidden"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
