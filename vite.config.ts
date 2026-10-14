@@ -29,8 +29,17 @@ export default defineConfig(() => {
                 return fs.createReadStream(apkFilePath).pipe(res);
               }
             }
-            if (req.url && (req.url === '/sw.js' || req.url.startsWith('/sw.js'))) {
-              const swFilePath = path.resolve(__dirname, 'public/sw.js');
+            if (
+              req.url &&
+              (req.url === '/sw.js' ||
+                req.url.startsWith('/sw.js') ||
+                req.url === '/OneSignalSDKWorker.js' ||
+                req.url.startsWith('/OneSignalSDKWorker.js') ||
+                req.url === '/OneSignalSDKUpdaterWorker.js' ||
+                req.url.startsWith('/OneSignalSDKUpdaterWorker.js'))
+            ) {
+              const fileName = req.url.split('?')[0].replace('/', '');
+              const swFilePath = path.resolve(__dirname, 'public', fileName);
               if (fs.existsSync(swFilePath)) {
                 res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
                 res.setHeader('Service-Worker-Allowed', '/');

@@ -1,7 +1,7 @@
 // app/api/send-notification/route.js
 // OneSignal real notification dispatch route
 
-const ONESIGNAL_APP_ID = '89883b4e-3e4e-4f53-92e8-8e20fc1fdc66';
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0';
 
 export async function POST(request) {
   try {

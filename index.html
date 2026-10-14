@@ -23,7 +23,7 @@
     <!-- OneSignal Web Push SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      // Gracefully handle OneSignal domain mismatch on non-production/preview URLs
+      // Gracefully handle OneSignal domain restriction on non-production/preview URLs
       window.addEventListener('unhandledrejection', function(event) {
         if (event.reason && (
           (typeof event.reason.message === 'string' && event.reason.message.includes('Can only be used on')) ||
@@ -35,17 +35,14 @@
       });
 
       window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
+      OneSignalDeferred.push(async function(OneSignal) {
         try {
           await OneSignal.init({
-            appId: "89883b4e-3e4e-4f53-92e8-8e20fc1fdc66",
-            notifyButton: {
-              enable: false,
-            },
+            appId: "b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0",
             allowLocalhostAsSecureOrigin: true,
           });
         } catch (err) {
-          console.warn('[OneSignal] Initialization skipped on current origin:', err?.message || err);
+          console.warn('[OneSignal] Initialization skipped on current preview origin:', err?.message || err);
         }
       });
     </script>

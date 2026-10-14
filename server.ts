@@ -15,7 +15,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 
-const ONESIGNAL_APP_ID = '89883b4e-3e4e-4f53-92e8-8e20fc1fdc66';
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0';
 
 // OneSignal Push Notification REST API endpoint
 app.post('/api/send-notification', async (req: Request, res: Response) => {
@@ -112,20 +112,24 @@ app.get(['/EduZone.apk', '/eduzone.apk'], (_req: Request, res: Response) => {
 });
 
 // Direct Service Worker script serving with strict JavaScript MIME type
-app.get('/sw.js', (_req: Request, res: Response) => {
-  const possiblePaths = [
-    path.resolve(__dirname, 'public/sw.js'),
-    path.resolve(__dirname, 'dist/sw.js'),
-  ];
-  for (const swPath of possiblePaths) {
-    if (fs.existsSync(swPath)) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      res.setHeader('Service-Worker-Allowed', '/');
-      return fs.createReadStream(swPath).pipe(res);
+app.get(
+  ['/sw.js', '/OneSignalSDKWorker.js', '/OneSignalSDKUpdaterWorker.js'],
+  (req: Request, res: Response) => {
+    const fileName = req.path.replace('/', '');
+    const possiblePaths = [
+      path.resolve(__dirname, 'public', fileName),
+      path.resolve(__dirname, 'dist', fileName),
+    ];
+    for (const swPath of possiblePaths) {
+      if (fs.existsSync(swPath)) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Service-Worker-Allowed', '/');
+        return fs.createReadStream(swPath).pipe(res);
+      }
     }
+    res.status(404).send('Service worker script not found');
   }
-  res.status(404).send('Service worker script not found');
-});
+);
 
 // Configure Vite in development or static in production
 const isProd = process.env.NODE_ENV === 'production';
