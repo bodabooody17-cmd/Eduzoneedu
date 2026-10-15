@@ -14,14 +14,18 @@ import {
   Zap,
 } from 'lucide-react';
 
+import { AdsterraNativeBanner } from './AdsterraNativeBanner';
+
 interface VideoPlayerModalProps {
   course: VideoCourse | null;
   onClose: () => void;
+  isAdmin?: boolean;
 }
 
 export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   course,
   onClose,
+  isAdmin = false,
 }) => {
   const [selectedLessonIndex, setSelectedLessonIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -150,6 +154,9 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Adsterra Native Banner (Directly under video player, min-height 250px, client-side, hidden for admin) */}
+            <AdsterraNativeBanner isAdmin={isAdmin} />
 
             {/* Floating XP Reward Notification */}
             {showEarnedToast && (

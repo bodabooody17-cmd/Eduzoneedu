@@ -42,12 +42,54 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [browserPermission, setBrowserPermission] = useState<NotificationPermission>('default');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync with events from Supervisor Dashboard & other tabs
+  const fetchServerNotifications = async () => {
+    try {
+      let userId = 'all';
+      if (typeof window !== 'undefined') {
+        try {
+          const stored = localStorage.getItem('eduzone_student_user');
+          if (stored) {
+            const user = JSON.parse(stored);
+            if (user?.contact) userId = user.contact;
+          }
+        } catch {}
+      }
+      const res = await fetch(`/api/notifications?userId=${encodeURIComponent(userId)}`);
+      const data = await res.json();
+      if (data?.success && Array.isArray(data.notifications)) {
+        const formatted = data.notifications.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          time: new Date(n.createdAt).toLocaleDateString('ar-EG', {
+            hour: '2-digit',
+            minute: '2-digit',
+            month: 'short',
+            day: 'numeric',
+          }),
+          read: n.isRead,
+          type: n.type || 'update',
+          actionUrl: n.actionUrl,
+        }));
+        setNotifications(formatted);
+        saveStoredNotifications(formatted);
+      }
+    } catch (err) {
+      console.warn('Notification fetch warning:', err);
+    }
+  };
+
+  // Sync with server API, events from Supervisor Dashboard & other tabs
   useEffect(() => {
-    setNotifications(getStoredNotifications());
+    fetchServerNotifications();
+
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setBrowserPermission(Notification.permission);
     }
+
+    const interval = setInterval(() => {
+      fetchServerNotifications();
+    }, 30000);
 
     const unsubscribe = subscribeToNotificationBroadcast(
       (newNotif) => {
@@ -58,7 +100,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -95,18 +140,27 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     const updated = notifications.map((n) => ({ ...n, read: true }));
     setNotifications(updated);
     saveStoredNotifications(updated);
+    try {
+      await fetch('/api/notifications/read-all', { method: 'POST' });
+    } catch {}
   };
 
-  const handleToggleRead = (id: string) => {
+  const handleToggleRead = async (id: string) => {
+    const target = notifications.find((n) => n.id === id);
     const updated = notifications.map((n) =>
-      n.id === id ? { ...n, read: !n.read } : n
+      n.id === id ? { ...n, read: true } : n
     );
     setNotifications(updated);
     saveStoredNotifications(updated);
+    if (target && !target.read) {
+      try {
+        await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+      } catch {}
+    }
   };
 
   if (!isOpen) return null;
@@ -216,9 +270,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           </div>
 
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">
-              <Bell className="w-10 h-10 mx-auto mb-2 opacity-40" />
-              <p className="text-xs">لا توجد إشعارات حالياً.</p>
+            <div className="p-8 text-center text-slate-500 space-y-1.5">
+              <Bell className="w-10 h-10 mx-auto mb-1 opacity-40 text-slate-400" />
+              <p className="text-sm font-black text-slate-300">لا يوجد إشعارات</p>
+              <p className="text-xs text-slate-500">ستظهر هنا أي تنبيهات دراسية أو مواعيد امتحانات فور صدورها.</p>
             </div>
           ) : (
             notifications.map((notif) => {

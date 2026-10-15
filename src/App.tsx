@@ -122,9 +122,44 @@ export default function App() {
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(() => {
+    return typeof window !== 'undefined' && window.location.pathname.startsWith('/notifications');
+  });
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+
+  const handleOpenNotifications = () => {
+    setIsNotificationsOpen(true);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/notifications') {
+      window.history.pushState(null, '', '/notifications');
+    }
+  };
+
+  const handleCloseNotifications = () => {
+    setIsNotificationsOpen(false);
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/notifications')) {
+      window.history.replaceState(null, '', '/');
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handlePop = () => {
+        if (window.location.pathname.startsWith('/notifications')) {
+          setIsNotificationsOpen(true);
+        } else if (window.location.pathname.startsWith('/admin')) {
+          setIsSupervisorModalOpen(true);
+        } else {
+          setIsNotificationsOpen(false);
+        }
+      };
+      if (window.location.pathname.startsWith('/admin')) {
+        setIsSupervisorModalOpen(true);
+      }
+      window.addEventListener('popstate', handlePop);
+      return () => window.removeEventListener('popstate', handlePop);
+    }
+  }, []);
 
   // Sync saved bookmarks with localStorage
   useEffect(() => {
@@ -135,9 +170,32 @@ export default function App() {
     }
   }, [savedIds]);
 
-  // Register Service Worker and subscribe to real-time notification broadcasts
+  // Register Service Worker and subscribe to real-time notification broadcasts & 30s API polling
   useEffect(() => {
     registerServiceWorker();
+
+    const fetchUnreadCount = async () => {
+      try {
+        let userId = 'all';
+        try {
+          const stored = localStorage.getItem('eduzone_student_user');
+          if (stored) {
+            const user = JSON.parse(stored);
+            if (user?.contact) userId = user.contact;
+          }
+        } catch {}
+        const res = await fetch(`/api/notifications?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        if (data?.success && typeof data.unreadCount === 'number') {
+          setUnreadNotificationsCount(data.unreadCount);
+        }
+      } catch (err) {
+        console.warn('Failed to poll unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    const pollInterval = setInterval(fetchUnreadCount, 30000);
 
     const unsubscribe = subscribeToNotificationBroadcast(
       (newNotif: EducationalNotification) => {
@@ -180,6 +238,7 @@ export default function App() {
     window.addEventListener('eduzone_xp_awarded', handleXpAwarded);
 
     return () => {
+      clearInterval(pollInterval);
       unsubscribe();
       window.removeEventListener('eduzone_progress_updated', handleProgressUpdated);
       window.removeEventListener('eduzone_xp_awarded', handleXpAwarded);
@@ -432,7 +491,7 @@ export default function App() {
           onOpenTimerModal={() => setIsTimerModalOpen(true)}
           onOpenContactModal={() => setIsContactModalOpen(true)}
           onOpenQuizModal={handleOpenQuiz}
-          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenNotifications={handleOpenNotifications}
           currentUser={currentUser}
           studentProgress={studentProgress}
           onOpenAuthModal={(role = 'student') => {
@@ -1033,6 +1092,7 @@ export default function App() {
         <VideoPlayerModal
           course={viewingCourse}
           onClose={() => setViewingCourse(null)}
+          isAdmin={currentUser?.role === 'supervisor' || (currentUser as any)?.role === 'admin'}
         />
 
         <InteractiveQuizModal
@@ -1080,7 +1140,7 @@ export default function App() {
         {/* Notification Center Modal */}
         <NotificationCenter
           isOpen={isNotificationsOpen}
-          onClose={() => setIsNotificationsOpen(false)}
+          onClose={handleCloseNotifications}
           onOpenTelegram={() => {
             setIsNotificationsOpen(false);
             handleOpenTelegramGroup();

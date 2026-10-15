@@ -17,6 +17,8 @@ app.use(express.json());
 
 const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0';
 
+import { db } from './src/db/userTrackingDb';
+
 // OneSignal Push Notification REST API endpoint
 app.post('/api/send-notification', async (req: Request, res: Response) => {
   try {
@@ -28,6 +30,17 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
         error: 'title and message are required',
       });
     }
+
+    // Always store the announcement in database so it appears in /notifications
+    const savedNotification = await db.notification.create({
+      data: {
+        userId: 'all',
+        title,
+        message,
+        actionUrl: actionUrl || undefined,
+        type: 'update',
+      },
+    });
 
     const payload: Record<string, any> = {
       app_id: ONESIGNAL_APP_ID,
@@ -49,9 +62,11 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
     // Retrieve OneSignal App REST API key from environment
     const apiKey = (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY || '').trim();
     if (!apiKey) {
-      return res.status(500).json({
-        success: false,
-        error: 'ONESIGNAL_REST_API_KEY is not configured in environment variables',
+      // Still return 200 since notification was saved in database
+      return res.status(200).json({
+        success: true,
+        notification: savedNotification,
+        message: 'تم حفظ الإشعار في المنصة بنجاح وسيظهر لجميع الطلاب (تنبيه: مفتاح OneSignal غير مضبوط للإرسال الخارجي)',
       });
     }
 
@@ -72,11 +87,12 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
 
     if (!response.ok) {
       console.warn(`[OneSignal] Dispatch returned status ${response.status}:`, data);
-      return res.status(response.status).json({
-        success: false,
-        error: data?.errors || `OneSignal error (${response.status})`,
+      return res.status(200).json({
+        success: true,
+        notification: savedNotification,
+        warning: data?.errors || `OneSignal error (${response.status})`,
         onesignal: data,
-        app_id: ONESIGNAL_APP_ID,
+        message: 'تم حفظ الإشعار في المنصة بنجاح وسيظهر للطلاب في قائمة الإشعارات',
       });
     }
 
@@ -87,8 +103,9 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
       app_id: ONESIGNAL_APP_ID,
       included_segments: ['All'],
       notification_id: data?.id,
+      notification: savedNotification,
       onesignal: data,
-      message: 'تم إرسال الإشعار بنجاح عبر OneSignal لجميع المشتركين!',
+      message: 'تم إرسال الإشعار بنجاح وحفظه في المنصة لجميع الطلاب!',
     });
   } catch (err: any) {
     return res.status(500).json({
@@ -96,6 +113,232 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
       error: err?.message || 'Server error while processing notification',
       app_id: ONESIGNAL_APP_ID,
       included_segments: ['All'],
+    });
+  }
+});
+
+// Notifications Database Endpoints
+app.get('/api/notifications', async (req: Request, res: Response) => {
+  try {
+    const userId = (req.query.userId as string) || 'all';
+    const notifications = await db.notification.findMany({
+      where: userId !== 'all' ? { userId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+    const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+    return res.status(200).json({
+      success: true,
+      notifications,
+      unreadCount,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to fetch notifications',
+    });
+  }
+});
+
+app.post('/api/notifications', async (req: Request, res: Response) => {
+  try {
+    const { title, message, userId = 'all', actionUrl, type = 'update' } = req.body || {};
+
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'title and message are required',
+      });
+    }
+
+    const notification = await db.notification.create({
+      data: {
+        userId,
+        title,
+        message,
+        actionUrl,
+        type,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      notification,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to create notification',
+    });
+  }
+});
+
+app.all('/api/notifications/:id/read', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updated = await db.notification.update({
+      where: { id },
+      data: { isRead: true },
+    });
+
+    if (!updated) {
+      return res.status(404).json({ success: false, error: 'Notification not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      notification: updated,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to update notification',
+    });
+  }
+});
+
+app.post('/api/notifications/read-all', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body || {};
+    const result = await db.notification.markAllAsRead(userId);
+
+    return res.status(200).json({
+      success: true,
+      count: result.count,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to mark all as read',
+    });
+  }
+});
+
+// Real Student Tracking & Admin APIs
+app.get('/api/admin/users', async (_req: Request, res: Response) => {
+  try {
+    const users = await db.user.findMany({
+      include: { enrollments: true },
+    });
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to fetch registered students',
+    });
+  }
+});
+
+app.get('/api/admin/users/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const user = await db.user.findUnique({
+      where: { id },
+      include: { enrollments: true, loginLogs: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'الطالب غير موجود' });
+    }
+
+    const enrollments = await db.enrollment.findMany({
+      where: { userId: id },
+    });
+
+    const loginLogs = await db.loginLog.findMany({
+      where: { userId: id },
+    });
+
+    // Fallback log if empty as requested: "لو مش موجود اعمل console.log لوقت الدخول"
+    if (!loginLogs || loginLogs.length === 0) {
+      console.log(`[StudentTracking] User ${id} login time fallback:`, new Date().toISOString());
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+      enrollments,
+      loginLogs,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to fetch student details',
+    });
+  }
+});
+
+// Real auth tracking: login and register logging
+app.post(['/api/auth/login', '/api/auth/register', '/api/auth/log'], async (req: Request, res: Response) => {
+  try {
+    const { id, name, phone, email, stage, role, avatarUrl } = req.body || {};
+
+    if (!name && !phone) {
+      return res.status(400).json({ success: false, error: 'User details required' });
+    }
+
+    const user = await db.user.create({
+      data: {
+        id,
+        name: name || 'طالب جديد',
+        phone,
+        email,
+        stage,
+        role: role || 'student',
+        avatarUrl,
+        lastSeen: new Date(),
+      },
+    });
+
+    // Real tracking: await db.loginLog.create({ data: { userId: user.id, timestamp: new Date() } })
+    const loginLog = await db.loginLog.create({
+      data: {
+        userId: user.id,
+        timestamp: new Date(),
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      user,
+      loginLog,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to log user login',
+    });
+  }
+});
+
+// Real enrollment API
+app.post('/api/enroll', async (req: Request, res: Response) => {
+  try {
+    const { userId, courseId, courseName, track } = req.body || {};
+    if (!userId || !courseId) {
+      return res.status(400).json({ success: false, error: 'userId and courseId are required' });
+    }
+
+    const enrollment = await db.enrollment.create({
+      data: {
+        userId,
+        courseId,
+        courseName,
+        track,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      enrollment,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Failed to enroll in course',
     });
   }
 });

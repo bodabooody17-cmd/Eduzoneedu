@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
+    <!-- Global Error Shield for 3rd-Party Cross-Origin Scripts -->
+    <script>
+      window.addEventListener('error', function(event) {
+        if (event.message === 'Script error.' || (typeof event.message === 'string' && event.message.includes('Script error'))) {
+          event.preventDefault();
+          console.warn('[3rd-party Script Error Suppressed]:', event.message, event.filename);
+          return true;
+        }
+      });
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        if (msg === 'Script error.' || (typeof msg === 'string' && msg.includes('Script error'))) {
+          console.warn('[3rd-party onerror Suppressed]:', msg, url);
+          return true;
+        }
+        return false;
+      };
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-W0FV8NTC0M"></script>
     <script>
@@ -8,6 +25,13 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-W0FV8NTC0M');
+      try {
+        var storedSession = localStorage.getItem('eduzone_user');
+        var session = storedSession ? JSON.parse(storedSession) : null;
+        if (session?.user?.id || session?.contact || session?.id) {
+          gtag('config', 'G-W0FV8NTC0M', { user_id: session?.user?.id || session?.id || session?.contact });
+        }
+      } catch (e) {}
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -58,5 +82,29 @@
   <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white overflow-x-hidden w-full max-w-full">
     <div id="root" class="w-full max-w-full overflow-x-hidden"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Adsterra General Script - Excludes Admin & Loads Asynchronously -->
+    <script>
+      (function() {
+        try {
+          var userStr = localStorage.getItem('eduzone_student_user');
+          if (userStr) {
+            var user = JSON.parse(userStr);
+            if (user && (user.role === 'supervisor' || user.role === 'admin')) {
+              return; // Do not show ads for admin
+            }
+          }
+        } catch (e) {}
+
+        var script = document.createElement('script');
+        script.setAttribute('data-cfasync', 'false');
+        script.src = 'https://bauval.org/14/e9ec1de84fc62758951fd8327504301c';
+        script.async = true;
+        script.onerror = function() {
+          console.warn('[Adsterra] Script load notice: blocked or unavailable');
+        };
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>

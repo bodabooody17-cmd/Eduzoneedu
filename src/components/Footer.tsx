@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Sparkles, Send } from 'lucide-react';
 
 interface FooterProps {
@@ -14,6 +14,36 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenTimer,
   onOpenCreatorProfile,
 }) => {
+  useEffect(() => {
+    try {
+      // Ensure DMCA badge has verified reference URL for official protection status
+      const dmcaBadges = document.querySelectorAll<HTMLAnchorElement>('a.dmca-badge');
+      if (dmcaBadges && dmcaBadges.length > 0) {
+        dmcaBadges.forEach((badge) => {
+          if (badge.href && !badge.href.includes('refurl')) {
+            const separator = badge.href.includes('?') ? '&' : '?';
+            badge.href = `${badge.href}${separator}refurl=${encodeURIComponent(window.location.href)}`;
+          }
+        });
+      }
+
+      // Load DMCA Badge Helper script asynchronously
+      const scriptId = 'dmca-badge-helper-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://images.dmca.com/Badges/DMCABadgeHelper.min.js';
+        script.async = true;
+        script.onerror = () => {
+          console.warn('[DMCA] Badge helper script load notice');
+        };
+        document.body.appendChild(script);
+      }
+    } catch (err) {
+      console.warn('[DMCA] Badge init notice:', err);
+    }
+  }, []);
+
   return (
     <footer className="w-full bg-slate-950 text-white mt-4 border-t border-slate-800/80 px-3 py-6 pb-24 text-right select-none">
       <div className="w-full flex flex-col space-y-5">
@@ -71,9 +101,24 @@ export const Footer: React.FC<FooterProps> = ({
           </p>
         </div>
 
-        {/* Copyright */}
-        <div className="pt-3 text-center text-xs text-slate-400 border-t border-slate-900 space-y-1">
-          <p>© 2026 EduZone - جميع الحقوق محفوظه -</p>
+        {/* Copyright & DMCA Protection */}
+        <div className="pt-3 text-center text-xs text-slate-400 border-t border-slate-900 space-y-2 flex flex-col items-center justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            <span>© 2026 EduZone - جميع الحقوق محفوظه -</span>
+            <a
+              href="//www.dmca.com/Protection/Status.aspx?ID=9d3c4934-f507-42de-9422-e9b6bb0ae751"
+              title="DMCA.com Protection Status"
+              className="dmca-badge inline-flex items-center align-middle transition-opacity hover:opacity-80"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://images.dmca.com/Badges/dmca-badge-w100-5x1-08.png?ID=9d3c4934-f507-42de-9422-e9b6bb0ae751"
+                alt="DMCA.com Protection Status"
+                className="inline-block"
+              />
+            </a>
+          </div>
           <p className="text-slate-300 font-medium">صُنع بكل ❤️ لطلاب مصر</p>
         </div>
       </div>

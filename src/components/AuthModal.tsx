@@ -205,6 +205,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('eduzone_theme', 'dark');
       // Award login bonus points
       awardPoints(50, 'تسجيل دخول ناجح برقم الهاتف', 'login');
+
+      // Real tracking: record login log in backend (await db.loginLog.create)
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cleanPhone,
+          name: name.trim(),
+          phone: cleanPhone,
+          stage: newUser.stage,
+          role,
+          avatarUrl: finalAvatarUrl,
+        }),
+      }).catch((e) => console.log('Auth login log fallback:', e));
     } catch (err) {
       console.error(err);
     }

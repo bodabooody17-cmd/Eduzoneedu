@@ -1,0 +1,53 @@
+// Prisma Schema for EduZone Platform
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  phone       String?      @unique
+  email       String?      @unique
+  stage       String?
+  role        String       @default("student")
+  avatarUrl   String?
+  lastSeen    DateTime?    @default(now())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  enrollments Enrollment[]
+  loginLogs   LoginLog[]
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId   String
+  courseName String?
+  track      String?
+  enrolledAt DateTime @default(now())
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @default("all")
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  actionUrl String?
+  type      String?  @default("update")
+}
