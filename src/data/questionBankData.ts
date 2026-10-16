@@ -7,6 +7,8 @@ export interface BankQuestion {
   id: string;
   num: number;
   subject: string;
+  track: string;
+  lesson: string;
   question: string;
   options: string[];
   correctIndex: number;
@@ -18,7 +20,9 @@ export interface BankQuestion {
 function generateSubjectQuestions(
   subjectName: string,
   prefix: string,
-  baseQuestions: { q: string; opts: string[]; corr: number; exp: string }[]
+  baseQuestions: { q: string; opts: string[]; corr: number; exp: string }[],
+  track: string = 'عام',
+  lesson: string = 'مراجعة المنهج'
 ): BankQuestion[] {
   const result: BankQuestion[] = [];
   for (let i = 1; i <= 200; i++) {
@@ -47,6 +51,8 @@ function generateSubjectQuestions(
       id: `${prefix}-${i}`,
       num: i,
       subject: subjectName,
+      track,
+      lesson,
       question: i <= baseQuestions.length ? base.q : `[سؤال #${i} - ${subjectName}]: ${base.q}`,
       options: distributedOptions,
       correctIndex: targetCorrectIndex,
@@ -333,13 +339,65 @@ const PSYCHOLOGY_BASE = [
   }
 ];
 
+const BIOLOGY_BASE = [
+  {
+    q: 'الخلايا اللمفاوية التائية السامة (Tc) تقضي على الخلايا المصابة بالفيروسات بواسطة:',
+    opts: ['إفراز بروتين البيرفورين والسموم اللمفاوية', 'الأجسام المضادة المباشرة', 'إفراز الهيستامين من الخلايا الصارية', 'البلعمة المباشرة فقط'],
+    corr: 0,
+    exp: 'تفرز خلايا Tc بروتين البيرفورين الذي يثقب غشاء الخلية المصابة ثم تفرز سموماً لمفاوية تنشط جينات تدمر نواة الخلية.'
+  },
+  {
+    q: 'إنزيم بلمرة الـ DNA يقوم ببناء شريط الـ DNA الجديد في الاتجاه:',
+    opts: ['من 5\' إلى 3\' دائماً', 'من 3\' إلى 5\' دائماً', 'في كلا الاتجاهين معاً', 'بدون اتجاه محدد'],
+    corr: 0,
+    exp: 'إنزيم البلمرة يضيف نيوكليوتيدات جديدة فقط للطرف 3\' للشريط النامي، لذلك يكون اتجاه البناء دائماً 5\' -> 3\'.'
+  }
+];
+
+const GEOLOGY_BASE = [
+  {
+    q: 'الفالق الدسر (الزحفي) هو نوع خاص من الفوالق المعكوسة يتميز بأن:',
+    opts: ['مستوى الفالق قليل الميل ويكاد يقترب من الأفقي', 'صخور الحائط العلوي تتحرك لأسفل', 'ناتج عن قوى شد تكتونية أفقية', 'لا يصاحبه أي حركة رأسية أو أفقية'],
+    corr: 0,
+    exp: 'الفالق الدسر صخوره المهشمة تزحف أفقياً تقريباً بمسافة ما على مستوى فالق قليل الميل وتتحرك صخور الحائط العلوي لأعلى.'
+  },
+  {
+    q: 'الصخور النارية الجوفية تمتاز بنسيج:',
+    opts: ['خشن التبلور ذي بلورات كبيرة الحجم وقليلة العدد', 'زجاجي عديم التبلور', 'دقيق التبلور مجهري', 'فقاعي مليء بالغازات'],
+    corr: 0,
+    exp: 'التبريد البطيء في باطن الأرض يعطي فرصة لتجمع عدد كبير من الأيونات حول مركز التبلور الواحد فتكون البلورات كبيرة وخشنة.'
+  }
+];
+
+const DRAWING_BASE = [
+  {
+    q: 'المسقط الأفقي لجسم هندسي يقع دائماً في الإسقاط العمودي:',
+    opts: ['أسفل المسقط الرأسي مباشرة وبنفس العرض', 'أعلى المسقط الرأسي', 'بجوار المسقط الجانبي على نفس الارتفاع', 'في زاوية 45 درجة فقط'],
+    corr: 0,
+    exp: 'في الإسقاط الهندسي المتعامد، المسقط الأفقي (Plan) يرسم تحت المسقط الرأسي (Elevation) متطابقاً معه في البعد الأفقي.'
+  }
+];
+
+const ICDL_BASE = [
+  {
+    q: 'لتثبيت نطاق خلايا ثابت في معادلات Excel مثل $A$1 نضغط على مفتاح:',
+    opts: ['F4', 'F2', 'F12', 'Ctrl + S'],
+    corr: 0,
+    exp: 'مفتاح F4 في برنامج الإكسيل يقوم بإضافة علامات الدولار ($) لتثبيت الصف والعمود معاً أثناء السحب والتعبئة التلقائية.'
+  }
+];
+
 export const QUESTION_BANK: BankQuestion[] = [
-  ...generateSubjectQuestions('التاريخ', 'hist', HISTORY_BASE),
-  ...generateSubjectQuestions('الفيزياء', 'phys', PHYSICS_BASE),
-  ...generateSubjectQuestions('الكيمياء', 'chem', CHEMISTRY_BASE),
-  ...generateSubjectQuestions('اللغة العربية', 'arabic', ARABIC_BASE),
-  ...generateSubjectQuestions('المحاسبة المالية', 'acc', ACCOUNTING_BASE),
-  ...generateSubjectQuestions('الرياضيات', 'math', MATH_BASE),
-  ...generateSubjectQuestions('الفلسفة والمنطق', 'phil', PHILOSOPHY_BASE),
-  ...generateSubjectQuestions('علم النفس والاجتماع', 'psy', PSYCHOLOGY_BASE),
+  ...generateSubjectQuestions('التاريخ', 'hist', HISTORY_BASE, 'أدبي', 'الحملة الفرنسية ومحمد علي'),
+  ...generateSubjectQuestions('الفلسفة والمنطق', 'phil', PHILOSOPHY_BASE, 'أدبي', 'الفلسفة البيئية والبيوإتيقا'),
+  ...generateSubjectQuestions('علم النفس والاجتماع', 'psy', PSYCHOLOGY_BASE, 'أدبي', 'نظريات التعلم والذكاء'),
+  ...generateSubjectQuestions('الفيزياء', 'phys', PHYSICS_BASE, 'علمي', 'الحث الكهرومغناطيسي وكيرشوف'),
+  ...generateSubjectQuestions('الكيمياء', 'chem', CHEMISTRY_BASE, 'علمي', 'الهيدروكربونات والكيمياء العضوية'),
+  ...generateSubjectQuestions('الأحياء', 'bio', BIOLOGY_BASE, 'علمي علوم', 'المناعة والوراثة الجزيئية DNA'),
+  ...generateSubjectQuestions('الجيولوجيا', 'geol', GEOLOGY_BASE, 'علمي علوم', 'التراكيب الجيولوجية وبنك الصخور'),
+  ...generateSubjectQuestions('الرياضيات', 'math', MATH_BASE, 'علمي رياضة', 'التفاضل والتكامل والمعدلات'),
+  ...generateSubjectQuestions('المحاسبة المالية', 'acc', ACCOUNTING_BASE, 'تجارة', 'قيود اليومية والقوائم المالية'),
+  ...generateSubjectQuestions('الرسم الفني والصناعي', 'draw', DRAWING_BASE, 'صنايع', 'المساقط والدوائر الصناعية'),
+  ...generateSubjectQuestions('مهارات الحاسب و ICDL', 'icdl', ICDL_BASE, 'ICDL', 'دوال الإكسيل وتنسيق الأبحاث'),
+  ...generateSubjectQuestions('اللغة العربية', 'arabic', ARABIC_BASE, 'عام', 'النحو والبلاغة والمشتقات'),
 ];

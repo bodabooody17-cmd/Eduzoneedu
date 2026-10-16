@@ -203,6 +203,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       localStorage.setItem('eduzone_user', JSON.stringify(newUser));
       localStorage.setItem('eduzone_theme', 'dark');
+      if (role === 'student') {
+        localStorage.setItem('EduZone_Track', stage);
+      }
       // Award login bonus points
       awardPoints(50, 'تسجيل دخول ناجح برقم الهاتف', 'login');
 
@@ -554,7 +557,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       <option value="دبلوم تجارة (3 و 5 سنوات)">دبلوم تجارة (3 و 5 سنوات)</option>
                       <option value="دبلوم صنايع وتكنولوجيا">دبلوم صنايع وتكنولوجيا</option>
                       <option value="ثانوية عامة لغات (Languages)">ثانوية عامة لغات (Languages)</option>
-                      <option value="كورسات جامعية و ICDL">دورات جامعية و ICDL</option>
+                      <option value="دورات جامعية و ICDL">دورات جامعية و ICDL</option>
                     </select>
                     <GraduationCap className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
                   </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { VideoCourse } from '../types';
 import { awardPoints } from '../utils/gamification';
+import { isAllowedForTrack } from '../lib/strictFilter';
 import {
   X,
   Play,
@@ -35,6 +36,30 @@ export const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
   const [showEarnedToast, setShowEarnedToast] = useState(false);
 
   if (!course) return null;
+
+  const myTrack = typeof window !== 'undefined' ? localStorage.getItem('EduZone_Track') || '' : '';
+  const isAllowed = !myTrack || isAllowedForTrack(`${course.title} ${course.category || ''}`, myTrack);
+
+  if (!isAllowed) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 text-right">
+        <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl animate-fadeIn">
+          <div className="text-red-400 font-bold text-sm">
+            هذه المادة غير متاحة لشعبتك: {myTrack}
+          </div>
+          <p className="text-xs text-slate-400">
+            تم حظر استعراض هذا المعسكر حفاظاً على مسار شعبتك المعتمد.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+          >
+            إغلاق والعودة للرئيسية
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const currentLesson = course.lessons[selectedLessonIndex] || course.lessons[0];
   const isLessonCompleted = completedLessonIds.includes(currentLesson.id);

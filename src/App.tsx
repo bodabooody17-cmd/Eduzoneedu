@@ -17,6 +17,7 @@ import { ContactModal } from './components/ContactModal';
 import { SavedModal } from './components/SavedModal';
 import { NotificationCenter } from './components/NotificationCenter';
 import { Footer } from './components/Footer';
+import AdsterraAd from './components/AdsterraAd';
 import { AuthModal, StudentUser, UserRole } from './components/AuthModal';
 import { StudentProfileModal } from './components/StudentProfileModal';
 import { SupervisorDashboardModal } from './components/SupervisorDashboardModal';
@@ -33,6 +34,8 @@ import {
   getStoredNotifications,
   EducationalNotification,
 } from './utils/notificationService';
+import { getMyTrackData, TRACKS_CONFIG } from './lib/tracks';
+import { isAllowedForTrack } from './lib/strictFilter';
 import {
   BookOpen,
   GraduationCap,
@@ -49,6 +52,11 @@ export default function App() {
   const [activePlanFilter, setActivePlanFilter] = useState<PlanFilter>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeNavTab, setActiveNavTab] = useState<'home' | 'summaries' | 'courses' | 'profile'>('home');
+  const [myTrack, setMyTrack] = useState<any>(() => getMyTrackData());
+  const trackStorageName =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('EduZone_Track') || (myTrack?.name || '')
+      : (myTrack?.name || '');
 
   // Gamification & Student Progress
   const [studentProgress, setStudentProgress] = useState<StudentProgress>(getStudentProgress);
@@ -237,11 +245,19 @@ export default function App() {
     window.addEventListener('eduzone_progress_updated', handleProgressUpdated);
     window.addEventListener('eduzone_xp_awarded', handleXpAwarded);
 
+    const handleTrackSync = () => {
+      setMyTrack(getMyTrackData());
+    };
+    window.addEventListener('storage', handleTrackSync);
+    window.addEventListener('eduzone_track_changed', handleTrackSync);
+
     return () => {
       clearInterval(pollInterval);
       unsubscribe();
       window.removeEventListener('eduzone_progress_updated', handleProgressUpdated);
       window.removeEventListener('eduzone_xp_awarded', handleXpAwarded);
+      window.removeEventListener('storage', handleTrackSync);
+      window.removeEventListener('eduzone_track_changed', handleTrackSync);
     };
   }, []);
 
@@ -263,6 +279,7 @@ export default function App() {
 
   const handleAuthSuccess = (user: StudentUser) => {
     setCurrentUser(user);
+    setMyTrack(getMyTrackData());
     setIsAuthModalOpen(false);
     if (pendingAction) {
       pendingAction();
@@ -273,10 +290,12 @@ export default function App() {
   const handleLogout = () => {
     try {
       localStorage.removeItem('eduzone_user');
+      localStorage.removeItem('EduZone_Track');
     } catch (e) {
       console.error(e);
     }
     setCurrentUser(null);
+    setMyTrack(null);
     setIsProfileModalOpen(false);
   };
 
@@ -295,18 +314,33 @@ export default function App() {
   };
 
   const handleDownloadPdf = (item: SummaryItem) => {
+    const track = trackStorageName || (myTrack?.name || '');
+    if (track && !isAllowedForTrack(`${item.title} ${item.subject}`, track)) {
+      alert(`هذه المادة غير متاحة لشعبتك: ${track}`);
+      return;
+    }
     requireAuth(`تحميل مذكرة ${item.title}`, () => {
       downloadSummaryAsDocument(item);
     });
   };
 
   const handleReadOnline = (item: SummaryItem) => {
+    const track = trackStorageName || (myTrack?.name || '');
+    if (track && !isAllowedForTrack(`${item.title} ${item.subject}`, track)) {
+      alert(`هذه المادة غير متاحة لشعبتك: ${track}`);
+      return;
+    }
     requireAuth(`قراءة مذكرة ${item.title}`, () => {
       setViewingSummary(item);
     });
   };
 
   const handleWatchCourse = (course: VideoCourse) => {
+    const track = trackStorageName || (myTrack?.name || '');
+    if (track && !isAllowedForTrack(`${course.title} ${course.category || ''}`, track)) {
+      alert(`هذه المادة غير متاحة لشعبتك: ${track}`);
+      return;
+    }
     requireAuth(`مشاهدة كورس ${course.title}`, () => {
       setViewingCourse(course);
     });
@@ -328,7 +362,9 @@ export default function App() {
   };
 
   const handleSelectNavTab = (tab: 'home' | 'summaries' | 'courses' | 'quiz' | 'profile') => {
-    setActiveNavTab(tab);
+    if (tab !== 'quiz') {
+      setActiveNavTab(tab);
+    }
     if (tab === 'home') {
       setActiveTrack('all');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -354,8 +390,31 @@ export default function App() {
 
   // Filtered summaries
   const filteredSummaries = useMemo(() => {
+    const trackToTest = trackStorageName || (myTrack?.name || '');
     return SUMMARY_ITEMS.filter((item) => {
-      // Track match
+      // 0. Strict Stream Filter: Block any unauthorized materials for track
+      if (trackToTest && !isAllowedForTrack(`${item.title} ${item.subject} ${item.trackLabel || ''}`, trackToTest)) {
+        return false;
+      }
+
+      // 1. Strict Track Filter based on student's registered stream
+      if (myTrack && myTrack.subjects) {
+        const matchesTrack =
+          myTrack.subjects.some(
+            (sub: string) =>
+              item.title?.toLowerCase().includes(sub.toLowerCase()) ||
+              item.subject?.toLowerCase().includes(sub.toLowerCase()) ||
+              item.trackLabel?.toLowerCase().includes(sub.toLowerCase())
+          ) ||
+          myTrack.keywords.some(
+            (k: string) =>
+              item.title?.toLowerCase().includes(k.toLowerCase()) ||
+              item.tags?.some((t: string) => t.toLowerCase().includes(k.toLowerCase()))
+          );
+        if (!matchesTrack) return false;
+      }
+
+      // 2. Tab Track match
       if (activeTrack !== 'all' && activeTrack !== 'free_courses') {
         if (activeTrack === 'thanawya_science') {
           if (item.track !== 'thanawya_science' && item.track !== 'thanawya_arts' && item.track !== 'languages') return false;
@@ -379,7 +438,7 @@ export default function App() {
       }
       return true;
     });
-  }, [activeTrack, activePlanFilter, searchQuery]);
+  }, [activeTrack, activePlanFilter, searchQuery, myTrack, trackStorageName]);
 
   // Filtered courses
   const filteredCourses = useMemo(() => {
@@ -390,7 +449,12 @@ export default function App() {
     ) {
       return [];
     }
+    const trackToTest = trackStorageName || (myTrack?.name || '');
     return VIDEO_COURSES.filter((course) => {
+      // Strict Stream Filter
+      if (trackToTest && !isAllowedForTrack(`${course.title} ${course.category || ''}`, trackToTest)) {
+        return false;
+      }
       if (activeTrack === 'university_courses' && course.track !== 'university') return false;
       if (activePlanFilter === 'free' && course.planType === 'paid') return false;
       if (activePlanFilter === 'paid' && course.planType !== 'paid') return false;
@@ -404,7 +468,7 @@ export default function App() {
       }
       return true;
     });
-  }, [activeTrack, activePlanFilter, searchQuery]);
+  }, [activeTrack, activePlanFilter, searchQuery, trackStorageName]);
 
   const savedItems = useMemo(() => {
     return SUMMARY_ITEMS.filter((item) => savedIds.includes(item.id));
@@ -427,6 +491,73 @@ export default function App() {
       free_courses: VIDEO_COURSES.length,
     };
   }, []);
+
+  // Section Navigation Hub Cards Configuration
+  const sections = [
+    {
+      id: 1,
+      title: 'الثانوية العامة (علمي وأدبي)',
+      count: 12,
+      type: 'ثانوية عامة',
+      description: 'مذكرات كبسولة الإنقاذ، قوانين الفيزياء، الكيمياء العضوية، والنحو الشامل لعام 2026/2027.',
+      targetTrack: 'thanawya_science' as EducationalTrack,
+      actionText: 'تصفح مذكرات الثانوية',
+      colorClass: 'bg-indigo-600',
+      badgeColorClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30',
+      hoverColorClass: 'group-hover:text-amber-300',
+      footerColorClass: 'text-amber-300',
+      iconType: 'book' as const,
+    },
+    {
+      id: 2,
+      title: 'الدبلومات الفنية والتجارية',
+      count: 5,
+      type: 'دبلومات فنية',
+      description: 'المحاسبة المالية، الرسم الفني، والتطبيقات الصناعية والتجارية الحديثة.',
+      targetTrack: 'technical_industrial' as EducationalTrack,
+      actionText: 'تصفح مواد الدبلومات',
+      colorClass: 'bg-teal-600',
+      badgeColorClass: 'bg-teal-500/20 text-teal-300 border-teal-400/30',
+      hoverColorClass: 'group-hover:text-teal-300',
+      footerColorClass: 'text-teal-300',
+      iconType: 'wrench' as const,
+    },
+    {
+      id: 3,
+      title: 'دورات ICDL',
+      count: 3,
+      type: 'دورات',
+      description: 'دورات احتراف برامج الأوفيس، الإكسيل المالي، ومهارات الحاسب الآلي لسوق العمل.',
+      targetTrack: 'university_courses' as EducationalTrack,
+      actionText: 'تصفح الكورسات الجامعية',
+      colorClass: 'bg-amber-600',
+      badgeColorClass: 'bg-amber-500/20 text-amber-300 border-amber-400/30',
+      hoverColorClass: 'group-hover:text-amber-300',
+      footerColorClass: 'text-amber-300',
+      iconType: 'grad' as const,
+    },
+  ];
+
+  const filteredSections = useMemo(() => {
+    return sections.filter((sec) => {
+      if (!trackStorageName) return true;
+      if (trackStorageName.includes('علمي') || trackStorageName.includes('أدبي')) {
+        // طالب ثانوية عامة، اخفي الدبلومات
+        return sec.type.includes('ثانوية عامة');
+      }
+      if (trackStorageName.includes('تجارة') || trackStorageName.includes('صنايع')) {
+        return sec.type.includes('دبلومات فنية');
+      }
+      if (trackStorageName.includes('ICDL')) {
+        return sec.type.includes('دورات');
+      }
+      return true;
+    });
+  }, [trackStorageName, myTrack]);
+
+  const filteredSectionsTotalCount = useMemo(() => {
+    return filteredSections.reduce((a, b) => a + b.count, 0);
+  }, [filteredSections]);
 
   // Distinct groups
   const thanawyaSummaries = useMemo(
@@ -537,6 +668,25 @@ export default function App() {
           />
 
           <div id="browse-sections" className="w-full px-3 space-y-6 pb-6">
+            {/* بنر الشعبة الدراسية المسجلة */}
+            {myTrack && (
+              <div className="bg-yellow-400 text-black p-3.5 rounded-2xl text-center font-bold flex justify-between items-center shadow-lg animate-fadeIn">
+                <span className="flex items-center gap-2 text-xs sm:text-sm font-black">
+                  <span>📚</span>
+                  <span>موادك: {myTrack.name}</span>
+                </span>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('EduZone_Track');
+                    window.location.reload();
+                  }}
+                  className="bg-black text-yellow-400 hover:bg-neutral-900 px-3 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 cursor-pointer"
+                >
+                  تغيير الشعبة
+                </button>
+              </div>
+            )}
+
             {/* Filter Tabs */}
             <TrackTabs
               activeTrack={activeTrack}
@@ -551,6 +701,8 @@ export default function App() {
               onSelectPlanFilter={setActivePlanFilter}
               onOpenPricingModal={() => setIsPricingModalOpen(true)}
               counts={counts}
+              myTrackName={trackStorageName || undefined}
+              myTrackCount={filteredSectionsTotalCount}
             />
 
             {/* User Login Banner if Guest */}
@@ -599,127 +751,88 @@ export default function App() {
 
                   {/* 1 Column Mobile Cards Stack */}
                   <div className="flex flex-col gap-3 w-full">
-                    {/* Card 1: Thanawya */}
-                    <div
-                      onClick={() => {
-                        setActiveTrack('thanawya_science');
-                        window.scrollTo({ top: 380, behavior: 'smooth' });
-                      }}
-                      className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
-                            <BookOpen className="w-5 h-5" />
+                    {filteredSections.map((sec) => (
+                      <div
+                        key={sec.id}
+                        onClick={() => {
+                          setActiveTrack(sec.targetTrack);
+                          window.scrollTo({ top: 380, behavior: 'smooth' });
+                        }}
+                        className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div
+                              className={`w-10 h-10 rounded-xl ${sec.colorClass} text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform`}
+                            >
+                              {sec.iconType === 'book' ? (
+                                <BookOpen className="w-5 h-5" />
+                              ) : sec.iconType === 'wrench' ? (
+                                <Wrench className="w-5 h-5" />
+                              ) : (
+                                <GraduationCap className="w-5 h-5" />
+                              )}
+                            </div>
+                            <span
+                              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${sec.badgeColorClass}`}
+                            >
+                              {sec.count} مذكرات
+                            </span>
                           </div>
-                          <span className="text-[11px] font-bold bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-400/30">
-                            {counts.thanawya_science + counts.thanawya_arts + counts.languages} مذكرات
-                          </span>
+                          <h3
+                            className={`text-base font-black text-white ${sec.hoverColorClass} transition-colors`}
+                          >
+                            {sec.title}
+                          </h3>
+                          <p className="text-xs text-slate-300 leading-relaxed">
+                            {sec.description}
+                          </p>
                         </div>
-                        <h3 className="text-base font-black text-white group-hover:text-amber-300 transition-colors">
-                          الثانوية العامة (علمي وأدبي)
-                        </h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          مذكرات كبسولة الإنقاذ، قوانين الفيزياء، الكيمياء العضوية، والنحو الشامل لعام 2026/2027.
-                        </p>
+                        <div
+                          className={`mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold ${sec.footerColorClass}`}
+                        >
+                          <span>{sec.actionText}</span>
+                          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        </div>
                       </div>
-                      <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-amber-300">
-                        <span>تصفح مذكرات الثانوية</span>
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                      </div>
-                    </div>
+                    ))}
 
-                    {/* Card 2: Technical & Commercial */}
-                    <div
-                      onClick={() => {
-                        setActiveTrack('technical_industrial');
-                        window.scrollTo({ top: 380, behavior: 'smooth' });
-                      }}
-                      className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
-                            <Wrench className="w-5 h-5" />
+                    {/* Show Video Lessons card only if visitor has no specific track set */}
+                    {!trackStorageName && (
+                      <div
+                        onClick={() => {
+                          setActiveTrack('free_courses');
+                          window.scrollTo({ top: 380, behavior: 'smooth' });
+                        }}
+                        className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
+                              <Video className="w-5 h-5" />
+                            </div>
+                            <span className="text-[11px] font-bold bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full border border-red-400/30">
+                              {counts.free_courses} معسكرات
+                            </span>
                           </div>
-                          <span className="text-[11px] font-bold bg-teal-500/20 text-teal-300 px-2.5 py-0.5 rounded-full border border-teal-400/30">
-                            {counts.technical_industrial + counts.commerce_diploma} مذكرات
-                          </span>
+                          <h3 className="text-base font-black text-white group-hover:text-red-300 transition-colors">
+                            المحاضرات ومعسكرات الفيديو HD
+                          </h3>
+                          <p className="text-xs text-slate-300 leading-relaxed">
+                            معسكرات إنقاذ كاملة بجودة 1080p Full HD مع تحصيل +80 XP لكل درس تشاهده.
+                          </p>
                         </div>
-                        <h3 className="text-base font-black text-white group-hover:text-teal-300 transition-colors">
-                          الدبلومات الفنية والتجارية
-                        </h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          المحاسبة المالية، الرسم الفني، والتطبيقات الصناعية والتجارية الحديثة.
-                        </p>
-                      </div>
-                      <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-teal-300">
-                        <span>تصفح مواد الدبلومات</span>
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-
-                    {/* Card 3: University Courses */}
-                    <div
-                      onClick={() => {
-                        setActiveTrack('university_courses');
-                        window.scrollTo({ top: 380, behavior: 'smooth' });
-                      }}
-                      className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
-                            <GraduationCap className="w-5 h-5" />
-                          </div>
-                          <span className="text-[11px] font-bold bg-amber-500/20 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-400/30">
-                            {counts.university_courses} دورات
-                          </span>
+                        <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-red-300">
+                          <span>مشاهدة معسكرات الفيديو</span>
+                          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         </div>
-                        <h3 className="text-base font-black text-white group-hover:text-amber-300 transition-colors">
-                          الدورات الجامعية و ICDL
-                        </h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          دورات احتراف برامج الأوفيس، الإكسيل المالي، ومهارات الحاسب الآلي لسوق العمل.
-                        </p>
                       </div>
-                      <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-amber-300">
-                        <span>تصفح الكورسات الجامعية</span>
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-
-                    {/* Card 4: Video Lessons */}
-                    <div
-                      onClick={() => {
-                        setActiveTrack('free_courses');
-                        window.scrollTo({ top: 380, behavior: 'smooth' });
-                      }}
-                      className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
-                            <Video className="w-5 h-5" />
-                          </div>
-                          <span className="text-[11px] font-bold bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full border border-red-400/30">
-                            {counts.free_courses} معسكرات
-                          </span>
-                        </div>
-                        <h3 className="text-base font-black text-white group-hover:text-red-300 transition-colors">
-                          المحاضرات ومعسكرات الفيديو HD
-                        </h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          معسكرات إنقاذ كاملة بجودة 1080p Full HD مع تحصيل +80 XP لكل درس تشاهده.
-                        </p>
-                      </div>
-                      <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-red-300">
-                        <span>مشاهدة معسكرات الفيديو</span>
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Adsterra Fixed Banner */}
+                <AdsterraAd />
 
                 {/* Top Picks Preview */}
                 <div className="space-y-3 pt-2">
@@ -733,7 +846,7 @@ export default function App() {
                     </span>
                   </div>
                   <div className="flex flex-col gap-3 w-full">
-                    {SUMMARY_ITEMS.slice(0, 4).map((item) => (
+                    {(myTrack ? filteredSummaries : SUMMARY_ITEMS.slice(0, 4)).map((item) => (
                       <SummaryCard
                         key={item.id}
                         item={item}
@@ -745,6 +858,11 @@ export default function App() {
                         onOpenVipPayment={() => setIsPricingModalOpen(true)}
                       />
                     ))}
+                    {myTrack && filteredSummaries.length === 0 && (
+                      <div className="text-center py-6 text-slate-400 text-xs bg-slate-900 border border-slate-800 rounded-2xl">
+                        لا توجد مذكرات مضافة حالياً تطابق شعبتك ({myTrack.name})
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

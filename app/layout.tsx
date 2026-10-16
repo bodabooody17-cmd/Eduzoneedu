@@ -35,30 +35,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-
-        {/* Adsterra General Script - Excludes Admin & Loads asynchronously */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var userStr = localStorage.getItem('eduzone_student_user');
-                  if (userStr) {
-                    var user = JSON.parse(userStr);
-                    if (user && (user.role === 'supervisor' || user.role === 'admin')) {
-                      return; // Do not show ads for admin
-                    }
-                  }
-                } catch(e) {}
-                var script = document.createElement('script');
-                script.setAttribute('data-cfasync', 'false');
-                script.src = 'https://bauval.org/14/e9ec1de84fc62758951fd8327504301c';
-                script.async = true;
-                document.body.appendChild(script);
-              })();
-            `,
-          }}
-        />
       </body>
     </html>
   );

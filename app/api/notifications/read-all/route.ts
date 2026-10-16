@@ -1,4 +1,4 @@
-import { db } from '../../../src/db/notificationsDb';
+import { db } from '@/src/db/notificationsDb';
 
 export async function POST(request: Request) {
   try {

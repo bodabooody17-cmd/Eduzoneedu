@@ -258,6 +258,300 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
         examTip: 'عند التثبيت المطلق للخلايا في معادلات الإكسيل، استخدم علامة الدولار ($) بالضغط على مفتاح F4.'
       }
     ]
+  },
+  {
+    id: 'bio-01',
+    title: 'كبسولة الأحياء والـ DNA والتكاثر والمناعة',
+    subject: 'أحياء',
+    track: 'thanawya_science',
+    trackLabel: 'ثانوية عامة - علمي علوم',
+    description: 'مراجعة شاملة لآليات المناعة الخلوية والخلطية، وتضاعف الـ DNA، والوراثة الجزيئية للأستاذ محمد صالح.',
+    author: 'د/ محمد صالح',
+    pagesCount: 20,
+    fileSize: '4.9 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'emerald',
+    tags: ['أحياء', 'علمي علوم', 'مناعة', 'DNA', 'تزاوج'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'المناعة في الإنسان وآليات الدفاع',
+        content: [
+          'خط الدفاع الأول: الجلد والمخاط وحمض الهيدروكلوريك والدموع لمنع دخول الميكروبات.',
+          'خط الدفاع الثاني: الاستجابة بالالتهاب وإفراز الهيستامين من الخلايا الصارية وقاعدية الدم.',
+          'خط الدفاع الثالث: المناعة المكتسبة التخصصية (المناعة بالخلطية عبر الأجسام المضادة والمناعة الخلوية عبر خلايا T السامة والمعاونة).'
+        ],
+        examTip: 'الأجسام المضادة لا تستطيع القضاء على الفيروسات داخل الخلايا الحية لكبر حجمها، لذا تعتمد المناعة الخلوية على الخلايا التائية Tc والخلايا القاتلة الطبيعية NK.'
+      }
+    ]
+  },
+  {
+    id: 'geol-01',
+    title: 'مفكرة الجيولوجيا وعلوم البيئة وبنك الصخور',
+    subject: 'جيولوجيا',
+    track: 'thanawya_science',
+    trackLabel: 'ثانوية عامة - علمي علوم',
+    description: 'دليل كامل لدورة الصخور، الفوالق والطيات، والحركات التكتونية للألواح والبيئة المتوازنة.',
+    author: 'جيولوجي/ ماجد إمام',
+    pagesCount: 16,
+    fileSize: '4.1 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: false,
+    colorScheme: 'teal',
+    tags: ['جيولوجيا', 'علمي علوم', 'صخور', 'فوالق', 'بيئة'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'التركيبات الجيولوجية الأولية والثانوية',
+        content: [
+          'الطيات: تنشأ نتيجة قوى الضغط، وتتكون من جناحين ومستوى محوري ومحور.',
+          'الفوالق: كسور يصاحبها إزاحة في صخور القشرة الأرضية (فالق عادي، معكوس، دسر، ذو حركة أفقية).'
+        ],
+        examTip: 'الفالق العادي ينتج من قوى شد وتتحرك صخور الحائط العلوي إلى أسفل بالنسبة للحائط السفلي.'
+      }
+    ]
+  },
+  {
+    id: 'math-01',
+    title: 'ملخص التفاضل والتكامل وقوانين الرياضة البحتة',
+    subject: 'رياضة بحتة',
+    track: 'thanawya_science',
+    trackLabel: 'ثانوية عامة - علمي رياضة',
+    description: 'كبسولة متكاملة لقواعد اشتقاق وتكامل الدوال المثلثية والأسية، ومسائل المعدلات الزمنية المرتبطة.',
+    author: 'أ/ أحمد عصام',
+    pagesCount: 22,
+    fileSize: '5.4 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'indigo',
+    tags: ['رياضة', 'تفاضل', 'تكامل', 'علمي رياضة', 'رياضة بحتة'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'قواعد اشتقاق الدوال المثلثية والدوال الأسية واللوغاريتمية',
+        content: [
+          'مشتقة الجا = جتا، ومشتقة الجتا = -جا، ومشتقة الظا = قا².',
+          'مشتقة هـ^س = هـ^س، ومشتقة لوغاريتم س الطبيعي = 1/س.',
+          'التكامل بالتجزيء: ت = ص ع - تكامل (ع دص).'
+        ],
+        examTip: 'في مسائل المعدلات الزمنية، تذكر فرض المتغيرات بدقة ومراعاة إشارة معدل التغير (موجب عند الزيادة وسالب عند النقصان).'
+      }
+    ]
+  },
+  {
+    id: 'stat-01',
+    title: 'كبسولة الاستاتيكا والديناميكا وعزوم القوى',
+    subject: 'رياضة تطبيقية',
+    track: 'thanawya_science',
+    trackLabel: 'ثانوية عامة - علمي رياضة',
+    description: 'شرح قوانين الاحتكاك، عزم الازدواج، مركز الثقل، وقوانين نيوتن الثلاثة للحركة في خط مستقيم.',
+    author: 'أ/ ماهر نيكولا',
+    pagesCount: 18,
+    fileSize: '4.6 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: false,
+    colorScheme: 'blue',
+    tags: ['استاتيكا', 'ديناميكا', 'رياضة تطبيقية', 'علمي رياضة', 'رياضة'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'الاتزان العام وعزم الازدواج',
+        content: [
+          'شروط اتزان جسم جاسيء: مجموع القوى = صفر ومجموع العزوم حول أي نقطة = صفر.',
+          'معامل الاحتكاك السكوني م_س = ظا (زاوية الاحتكاك ل).'
+        ],
+        examTip: 'قوة رد الفعل المحصل ح_م = ر √(1 + م_س²).'
+      }
+    ]
+  },
+  {
+    id: 'phil-01',
+    title: 'ملخص الفلسفة والمنطق الرمزي الحديث',
+    subject: 'فلسفة',
+    track: 'thanawya_arts',
+    trackLabel: 'ثانوية عامة - أدبي',
+    description: 'كبسولة الفلسفة البيئية، والأخلاق البيوطبية، والاستدلال الاستقرائي والاستنباطي لعام 2026/2027.',
+    author: 'د/ وسام أنور',
+    pagesCount: 19,
+    fileSize: '3.9 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'amber',
+    tags: ['فلسفة', 'منطق', 'أدبي', 'ثانوية'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'الفلسفة وقضايا البيئة والمسؤولية الإنسانية',
+        content: [
+          'مراحل علاقة الإنسان بالبيئة: التقديس والتقليه، التفسير والتوظيف، الاستغلال والسيطرة، القهر والاستبداد، الاحترام والصون.',
+          'أخلاق الأرض عند ألدو ليوبولد وتوسيع حدود المجتمع ليشمل التربة والمياه والنباتات والحيوانات.'
+        ],
+        examTip: 'ميز بين مرحلة القهر والاستبداد ومرحلة الاحترام والصون في أسئلة الامتحان المقالية.'
+      }
+    ]
+  },
+  {
+    id: 'hist-01',
+    title: 'مذكرة التاريخ الحديث ونواتج التعلم للثانوية',
+    subject: 'تاريخ',
+    track: 'thanawya_arts',
+    trackLabel: 'ثانوية عامة - أدبي',
+    description: 'تحليل الحملة الفرنسية، وبناء الدولة الحديثة في عهد محمد علي، وثورة 1919، وثورة 23 يوليو بالأدلة.',
+    author: 'أ/ محمد رزق',
+    pagesCount: 25,
+    fileSize: '5.2 MB',
+    term: 'الفصل الدراسي الأول والثاني',
+    year: '2026 / 2027',
+    featured: false,
+    colorScheme: 'rose',
+    tags: ['تاريخ', 'أدبي', 'ثانوية عامة', 'محمد علي', 'ثورة'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'محمد علي وبناء الدولة الحديثة ونظام الاحتكار',
+        content: [
+          'تطبيق نظام الاحتكار في الزراعة والصناعة والتجارة لضمان الدخول في سوق التجارة الدولية منافساً لغيره من الدول.',
+          'السياسة التعليمية وإنشاء المدارس الحربية وإرسال البعثات لأوروبا.'
+        ],
+        examTip: 'الاحتكار في جوهره كان توجيهاً اقتصادياً تحت إشراف الحكومة المباشر لتحقيق فائض تصديري.'
+      }
+    ]
+  },
+  {
+    id: 'com-biz-01',
+    title: 'مبادئ إدارة الأعمال والتسويق التجاري',
+    subject: 'ادارة اعمال',
+    track: 'commerce_diploma',
+    trackLabel: 'دبلوم تجارة 3 و 5 سنوات',
+    description: 'دليل تخطيط وتنظيم المشروعات، المزيج التسويقي 4Ps، وقوانين التجارة والشركات لدبلوم التجارة.',
+    author: 'أ/ هاني الشافعي',
+    pagesCount: 16,
+    fileSize: '3.7 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: false,
+    colorScheme: 'cyan',
+    tags: ['تجارة', 'ادارة اعمال', 'تسويق', 'دبلوم تجارة', 'اقتصاد'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'وظائف الإدارة والمزيج التسويقي الحديث',
+        content: [
+          'عناصر الإدارة: التخطيط، التنظيم، التوجيه، والرقابة.',
+          'المزيج التسويقي (4Ps): المنتج (Product)، السعر (Price)، المكان والتوزيع (Place)، والترويج (Promotion).'
+        ],
+        examTip: 'التسويق يبدأ قبل إنتاج السلعة بدراسة حاجات المستهلكين ويستمر بعد البيع بخدمات العملاء.'
+      }
+    ]
+  },
+  {
+    id: 'tech-mech-01',
+    title: 'أساسيات الميكانيكا العامة ودوائر التبريد والتكييف',
+    subject: 'ميكانيكا',
+    track: 'technical_industrial',
+    trackLabel: 'دبلوم صنايع وتكنولوجيا',
+    description: 'شرح دورة التبريد الانضغاطية، الصمامات والمكثفات، وتكنولوجيا التحكم الصناعي الحديث.',
+    author: 'م/ سامح عبد العزيز',
+    pagesCount: 19,
+    fileSize: '4.8 MB',
+    term: 'الفصل الدراسي الثاني',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'orange',
+    tags: ['صنايع', 'ميكانيكا', 'تبريد وتكييف', 'صناعي', 'تكنولوجيا'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'دورة التبريد الميكانيكية الأساسية',
+        content: [
+          'الأجزاء الرئيسية: الضاغط (Compressor)، المكثف (Condenser)، صمام التمدد (Expansion Valve)، والمبخر (Evaporator).',
+          'وسيط التبريد يتحول من غاز عالي الضغط إلى سائل ثم يتبخر ممتصاً الحرارة من الحيز المراد تبريده.'
+        ],
+        examTip: 'الضاغط يسحب بخار وسيط التبريد بضغط ودرجة حرارة منخفضين ويطرده بضغط ودرجة حرارة مرتفعين نحو المكثف.'
+      }
+    ]
+  },
+  {
+    id: 'lang-bio-01',
+    title: 'Advanced Biology & Genetics Revision (Languages)',
+    subject: 'Biology',
+    track: 'languages',
+    trackLabel: 'ثانوية عامة لغات',
+    description: 'Comprehensive English summaries covering DNA replication, cellular immunity, and genetics for language schools.',
+    author: 'Dr. Raymond Smith',
+    pagesCount: 18,
+    fileSize: '4.4 MB',
+    term: 'Term 2',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'emerald',
+    tags: ['Biology', 'Languages', 'لغات', 'English', 'DNA'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'Humoral and Cell-Mediated Immunity',
+        content: [
+          'First line of defense: physical and chemical barriers (Skin, Mucus, Tears, HCl).',
+          'Humoral Immunity: B-lymphocytes produce antibodies specific to extracellular antigens.',
+          'Cell-Mediated Immunity: Cytotoxic T-cells (Tc) destroy infected cells using perforin and granzymes.'
+        ],
+        examTip: 'Antibodies cannot enter infected cells; thus, viruses hidden intracellularly are destroyed by cytotoxic T-cells.'
+      }
+    ]
+  },
+  {
+    id: 'lang-math-01',
+    title: 'Pure Mathematics & Calculus for Language Schools',
+    subject: 'Math',
+    track: 'languages',
+    trackLabel: 'ثانوية عامة لغات',
+    description: 'Formulas and step-by-step problem solutions for differentiation, integration, and related rates.',
+    author: 'Eng. Sherif Fathy',
+    pagesCount: 20,
+    fileSize: '5.0 MB',
+    term: 'Term 2',
+    year: '2026 / 2027',
+    featured: false,
+    colorScheme: 'blue',
+    tags: ['Math', 'Calculus', 'Languages', 'لغات', 'Physics'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: [
+      {
+        pageNumber: 1,
+        title: 'Derivatives of Trigonometric & Exponential Functions',
+        content: [
+          'd/dx [sin(x)] = cos(x), d/dx [cos(x)] = -sin(x), d/dx [tan(x)] = sec²(x)',
+          'd/dx [e^x] = e^x, d/dx [ln(x)] = 1/x',
+          'Integration by parts: ∫ u dv = u v - ∫ v du'
+        ],
+        examTip: 'When computing limits involving indeterminate forms (0/0), remember to apply L’Hôpital’s rule carefully.'
+      }
+    ]
   }
 ];
 

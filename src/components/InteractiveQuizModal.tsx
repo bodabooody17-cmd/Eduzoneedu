@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { QUESTION_BANK, BankQuestion } from '../data/questionBankData';
+import { filterQuestions } from '../lib/questionBankFilter';
 import { awardPoints } from '../utils/gamification';
 import {
   X,
@@ -203,9 +204,51 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     }
   };
 
-  // Filter questions based on subject & free/all filter & search
+  // Active student track
+  const [studentTrack, setStudentTrack] = useState<string>(() => {
+    try {
+      return localStorage.getItem('EduZone_Track') || '';
+    } catch {
+      return '';
+    }
+  });
+
+  useEffect(() => {
+    const handleTrackUpdate = () => {
+      try {
+        setStudentTrack(localStorage.getItem('EduZone_Track') || '');
+      } catch {}
+    };
+    window.addEventListener('storage', handleTrackUpdate);
+    window.addEventListener('eduzone_track_changed', handleTrackUpdate);
+    return () => {
+      window.removeEventListener('storage', handleTrackUpdate);
+      window.removeEventListener('eduzone_track_changed', handleTrackUpdate);
+    };
+  }, []);
+
+  // Filter 1: By student track
+  const trackQuestions = useMemo(() => {
+    return filterQuestions(QUESTION_BANK, studentTrack);
+  }, [studentTrack]);
+
+  // Subjects available for this student track
+  const subjects = useMemo(() => {
+    const list = Array.from(new Set(trackQuestions.map((q) => q.subject)));
+    return ['all', ...list];
+  }, [trackQuestions]);
+
+  // When track or available subjects change, reset selectedSubject if not available
+  useEffect(() => {
+    if (selectedSubject !== 'all' && !subjects.includes(selectedSubject)) {
+      setSelectedSubject('all');
+      setCurrentIndex(0);
+    }
+  }, [subjects, selectedSubject]);
+
+  // Filter 2: By subject, free-only, and search within track questions
   const filteredQuestions = useMemo(() => {
-    return QUESTION_BANK.filter((q) => {
+    return trackQuestions.filter((q) => {
       if (selectedSubject !== 'all' && q.subject !== selectedSubject) {
         return false;
       }
@@ -217,17 +260,12 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
         return (
           q.question.toLowerCase().includes(query) ||
           q.subject.toLowerCase().includes(query) ||
-          q.options.some((o) => o.toLowerCase().includes(query))
+          q.options.some((o: string) => o.toLowerCase().includes(query))
         );
       }
       return true;
     });
-  }, [selectedSubject, showOnlyFree, searchQuery]);
-
-  const subjects = useMemo(() => {
-    const list = Array.from(new Set(QUESTION_BANK.map((q) => q.subject)));
-    return ['all', ...list];
-  }, []);
+  }, [trackQuestions, selectedSubject, showOnlyFree, searchQuery]);
 
   // Resume when modal opens (called before any early return to obey React Rules of Hooks)
   useEffect(() => {
@@ -316,7 +354,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     setSelectedSubject(newSubject);
     setSearchQuery('');
 
-    const newQuestions = QUESTION_BANK.filter((q) => {
+    const newQuestions = trackQuestions.filter((q) => {
       if (newSubject !== 'all' && q.subject !== newSubject) return false;
       if (showOnlyFree && !q.isFree) return false;
       return true;
@@ -397,9 +435,11 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     }
   };
 
-  // Calculate score on answered questions
-  const solvedCount = Object.keys(userAnswers).length;
+  // Calculate score on answered questions within student track
+  const trackQuestionIds = useMemo(() => new Set(trackQuestions.map((q) => q.id)), [trackQuestions]);
+  const solvedCount = Object.keys(userAnswers).filter((qId) => trackQuestionIds.has(qId)).length;
   const correctCount = Object.entries(userAnswers).filter(([qId, ans]) => {
+    if (!trackQuestionIds.has(qId)) return false;
     const targetQ = QUESTION_BANK.find((q) => q.id === qId);
     return targetQ && targetQ.correctIndex === ans;
   }).length;
@@ -446,6 +486,19 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Track Banner inside Quiz Modal */}
+        {studentTrack && (
+          <div className="bg-yellow-400 text-slate-950 px-3.5 py-2 text-xs font-bold flex items-center justify-between border-b border-amber-500/30 shrink-0">
+            <span className="flex items-center gap-2 font-black">
+              <span>🎯</span>
+              <span>مواد شعبتك: <span className="underline decoration-slate-950/40">{studentTrack}</span> ({trackQuestions.length} سؤال متاح)</span>
+            </span>
+            <span className="text-[10px] bg-slate-950 text-yellow-400 px-2.5 py-0.5 rounded-full font-bold">
+              {subjects.length - 1} مواد دراسية
+            </span>
+          </div>
+        )}
 
         {/* Floating XP Banner */}
         {xpBanner && (
@@ -494,7 +547,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
               }`}
               title="عرض الأسئلة الـ 60 المجانية فقط"
             >
-              {showOnlyFree ? 'المجاني (60)' : 'الكل (200)'}
+              {showOnlyFree ? 'المجاني فقط' : `الكل (${trackQuestions.length})`}
             </button>
           </div>
 
@@ -504,11 +557,11 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
               const isActive = selectedSubject === sub;
               const countInSub =
                 sub === 'all'
-                  ? QUESTION_BANK.length
-                  : QUESTION_BANK.filter((q) => q.subject === sub).length;
+                  ? trackQuestions.length
+                  : trackQuestions.filter((q) => q.subject === sub).length;
               const label =
                 sub === 'all'
-                  ? `جميع المواد (${countInSub})`
+                  ? `جميع موادك (${countInSub})`
                   : `${sub} (${countInSub})`;
 
               return (

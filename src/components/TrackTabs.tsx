@@ -27,6 +27,8 @@ interface TrackTabsProps {
     university_courses: number;
     free_courses: number;
   };
+  myTrackName?: string;
+  myTrackCount?: number;
 }
 
 export const TrackTabs: React.FC<TrackTabsProps> = ({
@@ -36,32 +38,50 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
   onSelectPlanFilter,
   onOpenPricingModal,
   counts,
+  myTrackName,
+  myTrackCount,
 }) => {
+  const isStudentThanawya = Boolean(
+    myTrackName && (myTrackName.includes('علمي') || myTrackName.includes('أدبي'))
+  );
+  const isStudentTechnical = Boolean(
+    myTrackName && (myTrackName.includes('تجارة') || myTrackName.includes('صنايع'))
+  );
+  const isStudentIcdl = Boolean(
+    myTrackName && myTrackName.includes('ICDL')
+  );
+
+  const allLabel = myTrackName ? 'الرئيسية (موادك)' : 'الرئيسية (الكل)';
+  const allCount = myTrackName && myTrackCount !== undefined ? myTrackCount : 21;
+
   // Independent Sections - Dedicated tabs for navigation
-  const tabs: { id: EducationalTrack; label: string; count?: number; icon: React.ReactNode }[] = [
+  const rawTabs: { id: EducationalTrack; label: string; count?: number; icon: React.ReactNode; hidden?: boolean }[] = [
     {
       id: 'all',
-      label: 'الرئيسية (الكل)',
-      count: counts.all,
+      label: allLabel,
+      count: allCount,
       icon: <Sparkles className="w-3.5 h-3.5" />,
     },
     {
       id: 'thanawya_science',
       label: 'ثانوية عامة',
-      count: counts.thanawya_science + counts.thanawya_arts + counts.languages,
+      count: 12,
       icon: <BookOpen className="w-3.5 h-3.5" />,
+      hidden: isStudentTechnical || isStudentIcdl,
     },
     {
       id: 'technical_industrial',
       label: 'دبلومات فنية وتجارية',
-      count: counts.technical_industrial + counts.commerce_diploma,
+      count: 5,
       icon: <Wrench className="w-3.5 h-3.5" />,
+      hidden: isStudentThanawya || isStudentIcdl,
     },
     {
       id: 'university_courses',
-      label: 'كورسات جامعية و ICDL',
-      count: counts.university_courses,
+      label: 'دورات ICDL',
+      count: 3,
       icon: <GraduationCap className="w-3.5 h-3.5" />,
+      hidden: isStudentThanawya || isStudentTechnical,
     },
     {
       id: 'free_courses',
@@ -79,6 +99,7 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       id: 'accounting_sandbox',
       label: 'محاكي القيود المحاسبية',
       icon: <Calculator className="w-3.5 h-3.5" />,
+      hidden: isStudentThanawya || isStudentIcdl,
     },
     {
       id: 'gamification_dashboard',
@@ -86,6 +107,8 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       icon: <Trophy className="w-3.5 h-3.5" />,
     },
   ];
+
+  const tabs = rawTabs.filter((t) => !t.hidden);
 
   return (
     <div className="bg-slate-900 border border-slate-800 shadow-md shadow-black/25 rounded-2xl p-3 space-y-2.5 text-white">

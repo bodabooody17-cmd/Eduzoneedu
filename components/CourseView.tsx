@@ -3,6 +3,7 @@
 import React from 'react';
 import { VideoCourse } from '../src/types';
 import { AdsterraNativeBanner } from '../src/components/AdsterraNativeBanner';
+import AdsterraAd from './AdsterraAd';
 
 interface CourseViewProps {
   course: VideoCourse;
@@ -30,6 +31,9 @@ export const CourseView: React.FC<CourseViewProps> = ({ course, isAdmin = false 
         <h3 className="text-sm font-bold text-amber-400">عن هذا الكورس</h3>
         <p className="text-xs text-slate-300 leading-relaxed">{course.description}</p>
       </div>
+
+      {/* Adsterra Fixed Banner under Course Description */}
+      <AdsterraAd />
     </div>
   );
 };
