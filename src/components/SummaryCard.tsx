@@ -36,6 +36,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
             >
               {isPaid ? 'مدفوع (VIP)' : 'مجاني'}
             </span>
+            {item.id === 'arab-01' && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 flex items-center gap-1">
+                ✨ ذهبية 24 صفحة
+              </span>
+            )}
             <span className="text-xs font-semibold text-slate-400">
               {item.subject}
             </span>

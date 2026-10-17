@@ -26,6 +26,7 @@ import { ApkInstallModal } from './components/ApkInstallModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AndroidFrame } from './components/AndroidFrame';
+import { GoldenArabicBookletModal } from './components/GoldenArabicBookletModal';
 import { downloadSummaryAsDocument } from './utils/downloadHelper';
 import { getStudentProgress, StudentProgress } from './utils/gamification';
 import {
@@ -135,6 +136,7 @@ export default function App() {
   });
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
+  const [isGoldenArabicModalOpen, setIsGoldenArabicModalOpen] = useState(false);
 
   const handleOpenNotifications = () => {
     setIsNotificationsOpen(true);
@@ -290,12 +292,11 @@ export default function App() {
   const handleLogout = () => {
     try {
       localStorage.removeItem('eduzone_user');
-      localStorage.removeItem('EduZone_Track');
+      // EduZone_Track is permanently fixed and not removed on logout
     } catch (e) {
       console.error(e);
     }
     setCurrentUser(null);
-    setMyTrack(null);
     setIsProfileModalOpen(false);
   };
 
@@ -331,7 +332,11 @@ export default function App() {
       return;
     }
     requireAuth(`قراءة مذكرة ${item.title}`, () => {
-      setViewingSummary(item);
+      if (item.id === 'arab-01') {
+        setIsGoldenArabicModalOpen(true);
+      } else {
+        setViewingSummary(item);
+      }
     });
   };
 
@@ -670,20 +675,8 @@ export default function App() {
           <div id="browse-sections" className="w-full px-3 space-y-6 pb-6">
             {/* بنر الشعبة الدراسية المسجلة */}
             {myTrack && (
-              <div className="bg-yellow-400 text-black p-3.5 rounded-2xl text-center font-bold flex justify-between items-center shadow-lg animate-fadeIn">
-                <span className="flex items-center gap-2 text-xs sm:text-sm font-black">
-                  <span>📚</span>
-                  <span>موادك: {myTrack.name}</span>
-                </span>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('EduZone_Track');
-                    window.location.reload();
-                  }}
-                  className="bg-black text-yellow-400 hover:bg-neutral-900 px-3 py-1.5 rounded-xl text-xs font-bold transition-transform active:scale-95 cursor-pointer"
-                >
-                  تغيير الشعبة
-                </button>
+              <div className="bg-yellow-400 text-black p-3 rounded-xl m-3 text-center font-bold">
+                <span>📚 موادك: {myTrack?.name || trackStorageName}</span>
               </div>
             )}
 
@@ -1205,6 +1198,12 @@ export default function App() {
           item={viewingSummary}
           onClose={() => setViewingSummary(null)}
           onDownloadPdf={handleDownloadPdf}
+          onOpenGoldenBooklet={() => setIsGoldenArabicModalOpen(true)}
+        />
+
+        <GoldenArabicBookletModal
+          isOpen={isGoldenArabicModalOpen}
+          onClose={() => setIsGoldenArabicModalOpen(false)}
         />
 
         <VideoPlayerModal

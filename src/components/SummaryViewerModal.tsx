@@ -20,12 +20,14 @@ interface SummaryViewerModalProps {
   item: SummaryItem | null;
   onClose: () => void;
   onDownloadPdf: (item: SummaryItem) => void;
+  onOpenGoldenBooklet?: () => void;
 }
 
 export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
   item,
   onClose,
   onDownloadPdf,
+  onOpenGoldenBooklet,
 }) => {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [hasCompleted, setHasCompleted] = useState(false);
@@ -124,6 +126,19 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
+            {item.id === 'arab-01' && onOpenGoldenBooklet && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenGoldenBooklet();
+                }}
+                className="px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-md hover:brightness-105 transition cursor-pointer"
+                title="فتح المولد الذهبي 24 صفحة بالذكاء الاصطناعي"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
+                <span className="hidden sm:inline">المولد الذهبي (24 صفحة)</span>
+              </button>
+            )}
             <button
               onClick={() => onDownloadPdf(item)}
               title="تحميل المذكرة PDF"

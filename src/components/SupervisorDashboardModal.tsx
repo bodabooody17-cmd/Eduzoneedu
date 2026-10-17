@@ -28,6 +28,7 @@ import {
   UserCheck,
   ArrowRight,
   Phone,
+  Download,
 } from 'lucide-react';
 import { StudentUser } from './AuthModal';
 import { playNotificationChime } from '../utils/notificationAudio';
@@ -38,6 +39,50 @@ import {
   saveStoredNotifications,
   broadcastNotification,
 } from '../utils/notificationService';
+
+export const ALL_GENERATOR_SUBJECTS = [
+  // ثانوي عام علمي علوم
+  { شعبة: 'ثانوية عامة علمي علوم', مادة: 'فيزياء', كود: 'physics_science' },
+  { شعبة: 'ثانوية عامة علمي علوم', مادة: 'كيمياء', كود: 'chemistry_science' },
+  { شعبة: 'ثانوية عامة علمي علوم', مادة: 'أحياء', كود: 'biology' },
+  { شعبة: 'ثانوية عامة علمي علوم', مادة: 'جيولوجيا وعلوم بيئية', كود: 'geology' },
+  // علمي رياضة
+  { شعبة: 'ثانوية عامة علمي رياضة', مادة: 'فيزياء', كود: 'physics_math' },
+  { شعبة: 'ثانوية عامة علمي رياضة', مادة: 'كيمياء', كود: 'chemistry_math' },
+  { شعبة: 'ثانوية عامة علمي رياضة', مادة: 'رياضة بحتة - جبر وتفاضل وتكامل', كود: 'pure_math' },
+  { شعبة: 'ثانوية عامة علمي رياضة', مادة: 'رياضة تطبيقية - استاتيكا وديناميكا', كود: 'applied_math' },
+  // أدبي
+  { شعبة: 'ثانوية عامة أدبي', مادة: 'تاريخ', كود: 'history' },
+  { شعبة: 'ثانوية عامة أدبي', مادة: 'جغرافيا', كود: 'geography' },
+  { شعبة: 'ثانوية عامة أدبي', مادة: 'فلسفة ومنطق', كود: 'philosophy' },
+  { شعبة: 'ثانوية عامة أدبي', مادة: 'علم نفس واجتماع', كود: 'psychology' },
+  // ثانوي لغات - كامل
+  { شعبة: 'ثانوي لغات علمي علوم', مادة: 'Physics - فيزياء لغات', كود: 'physics_languages' },
+  { شعبة: 'ثانوي لغات علمي علوم', مادة: 'Chemistry - كيمياء لغات', كود: 'chemistry_languages' },
+  { شعبة: 'ثانوي لغات علمي علوم', مادة: 'Biology - أحياء لغات', كود: 'biology_languages' },
+  { شعبة: 'ثانوي لغات علمي رياضة', مادة: 'Pure Mathematics - رياضة بحتة لغات', كود: 'pure_math_languages' },
+  { شعبة: 'ثانوي لغات علمي رياضة', مادة: 'Applied Mechanics - ميكانيكا لغات', كود: 'mechanics_languages' },
+  { شعبة: 'ثانوي لغات أدبي', مادة: 'History & Geography - تاريخ وجغرافيا لغات', كود: 'history_geo_lang' },
+  { شعبة: 'ثانوي لغات', مادة: 'English High Level - انجليزي مستوى رفيع', كود: 'english_high' },
+  { شعبة: 'ثانوي لغات', مادة: 'French Second Language - فرنساوي لغة ثانية', كود: 'french_lang' },
+  { شعبة: 'ثانوي لغات', مادة: 'German - ألماني لغات', كود: 'german_lang' },
+  // مشترك
+  { شعبة: 'مشترك ثانوي عام', مادة: 'لغة عربية', كود: 'arabic' },
+  { شعبة: 'مشترك ثانوي عام', مادة: 'لغة انجليزية', كود: 'english' },
+  { شعبة: 'مشترك ثانوي عام', مادة: 'لغة فرنسية عامة', كود: 'french_general' },
+  // تجارة
+  { شعبة: 'دبلوم تجارة', مادة: 'محاسبة مالية', كود: 'accounting' },
+  { شعبة: 'دبلوم تجارة', مادة: 'إدارة أعمال وسكرتارية', كود: 'business' },
+  { شعبة: 'دبلوم تجارة', مادة: 'اقتصاد واحصاء', كود: 'economics' },
+  { شعبة: 'دبلوم تجارة', مادة: 'قانون تجاري', كود: 'commercial_law' },
+  // صنايع
+  { شعبة: 'دبلوم صنايع', مادة: 'رسم فني وميكانيكا', كود: 'technical_drawing' },
+  { شعبة: 'دبلوم صنايع', مادة: 'فيزياء صنايع', كود: 'physics_tech' },
+  { شعبة: 'دبلوم صنايع', مادة: 'رياضة صنايع', كود: 'math_tech' },
+  // زراعة
+  { شعبة: 'دبلوم زراعة', مادة: 'محاصيل زراعية وانتاج حيواني', كود: 'agriculture' },
+  { شعبة: 'دبلوم زراعة', مادة: 'كيمياء وأراضي زراعية', كود: 'agriculture_chem' },
+];
 
 interface SupervisorDashboardModalProps {
   isOpen: boolean;
@@ -54,7 +99,14 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
   onNotificationSent,
   theme = 'dark',
 }) => {
-  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'news' | 'rewards' | 'students'>('send');
+  const [activeTab, setActiveTab] = useState<'send' | 'history' | 'news' | 'rewards' | 'students' | 'generator'>('send');
+
+  // 33-Subject Summary AI Generator
+  const [genApiKey, setGenApiKey] = useState('');
+  const [genProgress, setGenProgress] = useState('جاهز للبدء...');
+  const [genLogs, setGenLogs] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedSummaries, setGeneratedSummaries] = useState<Array<{ شعبة: string; مادة: string; content: string }>>([]);
 
   // New Notification Form States
   const [notifTitle, setNotifTitle] = useState('');
@@ -306,6 +358,111 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
     }
   };
 
+  // 33-Subject Summary AI Generator Handlers
+  const handleStartAllGeneration = async () => {
+    const key = genApiKey.trim();
+    if (!key) {
+      alert('يرجى إدخال مفتاح Gemini API للبدء في توليد الـ 33 مادة');
+      return;
+    }
+    setIsGenerating(true);
+    setGenProgress(`🚀 بدأنا توليد ${ALL_GENERATOR_SUBJECTS.length} مادة كاملة (495 صفحة)...`);
+    const results: Array<{ شعبة: string; مادة: string; content: string }> = [...generatedSummaries];
+
+    for (let i = 0; i < ALL_GENERATOR_SUBJECTS.length; i++) {
+      const sub = ALL_GENERATOR_SUBJECTS[i];
+      setGenProgress(`⏳ [${i + 1}/${ALL_GENERATOR_SUBJECTS.length}] ${sub.شعبة} - ${sub.مادة}`);
+      setGenLogs((prev) => [...prev, `⏳ جاري: ${sub.شعبة} - ${sub.مادة}`]);
+
+      const prompt = `
+أنت خبير مناهج وزارة التربية والتعليم المصرية 2026/2027 - تخصص ${sub.شعبة}.
+اكتب ملخص كامل 15 صفحة لمادة: ${sub.مادة} - شعبة: ${sub.شعبة}
+
+قواعد إجبارية بدون اختصار:
+- كل صفحة 500 كلمة على الأقل.
+- لا تتوقف حتى تكمل 15 صفحة.
+- التقسيم:
+صفحة 1: مقدمة وتوزيع درجات وخريطة منهج
+صفحة 2-3: الفصل الأول تفصيلي
+صفحة 4-5: الفصل الثاني تفصيلي
+صفحة 6: الفصل الثالث
+صفحة 7: الفصل الرابع
+صفحة 8: الفصل الخامس
+صفحة 9: الفصل السادس
+صفحة 10: الفصل السابع والثامن
+صفحة 11: جدول القوانين
+صفحة 12: جدول التعريفات
+صفحة 13: مقارنات ورسومات
+صفحة 14: 60 سؤال متوقع بالاجابات
+صفحة 15: خريطة ذهنية ونصائح + "إعداد منصة Eduzone"
+- لو المادة لغات اكتب المصطلح بالانجليزي والعربي معا.
+- منهج 2026/2027 كامل بدون حذف.
+- في نهاية كل صفحة اكتب [انتهت صفحة X]
+- في النهاية اكتب [انتهى ملخص ${sub.مادة} 15 صفحة]
+
+ابدأ الآن بصفحة 1 فورا.
+`;
+
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: 16000, temperature: 0.4 },
+            }),
+          }
+        );
+        const data = await res.json();
+        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+          throw new Error(data.error?.message || 'لم يتم استلام نص من النموذج');
+        }
+        const text = data.candidates[0].content.parts[0].text;
+        results.push({ ...sub, content: text });
+        setGeneratedSummaries([...results]);
+
+        // Auto download file
+        try {
+          const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${sub.شعبة} - ${sub.مادة} - 15 صفحة.md`;
+          a.click();
+        } catch (dErr) {
+          console.warn('Auto download err:', dErr);
+        }
+
+        setGenLogs((prev) => [...prev, `✅ ${sub.شعبة} - ${sub.مادة} | ${text.length} حرف`]);
+      } catch (e: any) {
+        setGenLogs((prev) => [...prev, `❌ فشل ${sub.مادة}: ${e.message || e}`]);
+      }
+
+      await new Promise((r) => setTimeout(r, 4000));
+    }
+
+    setGenProgress(`🎉 انتهى! ${ALL_GENERATOR_SUBJECTS.length} مادة × 15 صفحة = ${ALL_GENERATOR_SUBJECTS.length * 15} صفحة`);
+    setIsGenerating(false);
+  };
+
+  const handleDownloadAllSummaries = () => {
+    if (generatedSummaries.length === 0) {
+      alert('لم يتم توليد أي محتوى بعد');
+      return;
+    }
+    const all = generatedSummaries
+      .map((s) => `# ${s.شعبة} - ${s.مادة}\n\n${s.content}\n\n---\n`)
+      .join('');
+    const blob = new Blob([all], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Eduzone-33-مادة-495-صفحة.md`;
+    a.click();
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn text-right">
       <div className="w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl border border-amber-500/40 bg-slate-900 text-white overflow-hidden flex flex-col max-h-[92vh] transition-colors duration-200">
@@ -425,6 +582,17 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
           >
             <Users className="w-3.5 h-3.5" />
             <span>الطلاب المسجلين</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('generator')}
+            className={`flex-1 py-2 px-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer text-xs ${
+              activeTab === 'generator'
+                ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>المولد الشامل (33 مادة)</span>
           </button>
         </div>
 
@@ -1004,6 +1172,104 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB 6: AI 33-Subject Summary Generator */}
+          {activeTab === 'generator' && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-sm font-black text-amber-400 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span>Eduzone - مولد الملخصات الشامل (منهج 2026/2027)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-300 mt-0.5">
+                      33 مادة × 15 صفحة = 495 صفحة كاملة بدون اختصار لجميع الشعب (علمي علوم / رياضة / أدبي / لغات / تجارة / صنايع / زراعة)
+                    </p>
+                  </div>
+                  <a
+                    href="/generator.html"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-bold text-amber-400 hover:text-amber-300 underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>فتح الأداة في صفحة مستقلة</span>
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-slate-900 border border-slate-800 p-2 rounded-xl">📚 ثانوي عام: 12 مادة</div>
+                  <div className="bg-blue-950/60 border border-blue-900 p-2 rounded-xl text-blue-300">🌍 ثانوي لغات: 9 مواد</div>
+                  <div className="bg-emerald-950/60 border border-emerald-900 p-2 rounded-xl text-emerald-300">💼 دبلومات: 12 مادة</div>
+                  <div className="bg-amber-950/60 border border-amber-900 p-2 rounded-xl text-amber-300 font-bold">📦 الإجمالي: 33 مادة</div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-300">
+                    مفتاح Gemini API:
+                  </label>
+                  <input
+                    type="password"
+                    value={genApiKey}
+                    onChange={(e) => setGenApiKey(e.target.value)}
+                    placeholder="ضع مفتاح Gemini API هنا (AI Studio Key)"
+                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-hidden focus:ring-1 focus:ring-amber-400"
+                  />
+                </div>
+
+                <button
+                  onClick={handleStartAllGeneration}
+                  disabled={isGenerating}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-sm shadow-md transition-all active:scale-98 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-slate-950" />
+                  <span>{isGenerating ? 'جاري التوليد الآن... يرجى الانتظار' : '🚀 ابدأ توليد كل المواد (495 صفحة)'}</span>
+                </button>
+
+                {/* Progress bar */}
+                <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs font-bold text-amber-300 flex items-center justify-between">
+                  <span>{genProgress}</span>
+                  <span className="font-mono text-slate-400">
+                    {generatedSummaries.length} / {ALL_GENERATOR_SUBJECTS.length}
+                  </span>
+                </div>
+
+                {/* Log box */}
+                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 h-44 overflow-y-auto text-[11px] leading-relaxed space-y-1 font-mono text-slate-300">
+                  {genLogs.length === 0 ? (
+                    <div className="text-slate-500 text-center py-8">سجل التوليد سيظهر هنا فور الضغط على زر البدء...</div>
+                  ) : (
+                    genLogs.map((lg, i) => (
+                      <div key={i} className="border-b border-slate-900 pb-1">{lg}</div>
+                    ))
+                  )}
+                </div>
+
+                {/* Download and Clear */}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={handleDownloadAllSummaries}
+                    disabled={generatedSummaries.length === 0}
+                    className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>تحميل ملف مجمع (Eduzone-33-مادة.md)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setGenLogs([]);
+                      setGeneratedSummaries([]);
+                      setGenProgress('جاهز للبدء...');
+                    }}
+                    className="py-2 px-4 rounded-xl bg-red-950/70 hover:bg-red-900 text-red-300 border border-red-800/40 text-xs font-bold transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

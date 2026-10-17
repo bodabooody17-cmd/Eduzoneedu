@@ -117,20 +117,8 @@ export default function HomePage() {
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* بنر الشعبة الدراسية المسجلة */}
         {myTrack && (
-          <div className="bg-yellow-400 text-black p-3.5 rounded-xl text-center font-bold flex justify-between items-center shadow-lg animate-fadeIn">
-            <span className="flex items-center gap-2 text-sm sm:text-base">
-              <span>📚</span>
-              <span>موادك: {myTrack.name}</span>
-            </span>
-            <button
-              onClick={() => {
-                localStorage.removeItem('EduZone_Track');
-                window.location.reload();
-              }}
-              className="bg-black hover:bg-neutral-900 text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer"
-            >
-              تغيير الشعبة
-            </button>
+          <div className="bg-yellow-400 text-black p-3 rounded-xl m-3 text-center font-bold">
+            <span>📚 موادك: {myTrack?.name || trackName}</span>
           </div>
         )}
 

@@ -207,16 +207,25 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
   // Active student track
   const [studentTrack, setStudentTrack] = useState<string>(() => {
     try {
-      return localStorage.getItem('EduZone_Track') || '';
+      return localStorage.getItem('EduZone_Track') || currentUser?.stage || '';
     } catch {
-      return '';
+      return currentUser?.stage || '';
     }
   });
 
   useEffect(() => {
+    if (currentUser?.stage && !localStorage.getItem('EduZone_Track')) {
+      try {
+        localStorage.setItem('EduZone_Track', currentUser.stage);
+        setStudentTrack(currentUser.stage);
+      } catch {}
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
     const handleTrackUpdate = () => {
       try {
-        setStudentTrack(localStorage.getItem('EduZone_Track') || '');
+        setStudentTrack(localStorage.getItem('EduZone_Track') || currentUser?.stage || '');
       } catch {}
     };
     window.addEventListener('storage', handleTrackUpdate);
@@ -225,7 +234,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
       window.removeEventListener('storage', handleTrackUpdate);
       window.removeEventListener('eduzone_track_changed', handleTrackUpdate);
     };
-  }, []);
+  }, [currentUser]);
 
   // Filter 1: By student track
   const trackQuestions = useMemo(() => {
@@ -266,6 +275,15 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
       return true;
     });
   }, [trackQuestions, selectedSubject, showOnlyFree, searchQuery]);
+
+  // Set of question IDs in the student's track (computed unconditionally before any early return to strictly obey Rules of Hooks)
+  const trackQuestionIds = useMemo(() => new Set(trackQuestions.map((q) => q.id)), [trackQuestions]);
+  const solvedCount = Object.keys(userAnswers).filter((qId) => trackQuestionIds.has(qId)).length;
+  const correctCount = Object.entries(userAnswers).filter(([qId, ans]) => {
+    if (!trackQuestionIds.has(qId)) return false;
+    const targetQ = QUESTION_BANK.find((q) => q.id === qId);
+    return targetQ && targetQ.correctIndex === ans;
+  }).length;
 
   // Resume when modal opens (called before any early return to obey React Rules of Hooks)
   useEffect(() => {
@@ -435,15 +453,6 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     }
   };
 
-  // Calculate score on answered questions within student track
-  const trackQuestionIds = useMemo(() => new Set(trackQuestions.map((q) => q.id)), [trackQuestions]);
-  const solvedCount = Object.keys(userAnswers).filter((qId) => trackQuestionIds.has(qId)).length;
-  const correctCount = Object.entries(userAnswers).filter(([qId, ans]) => {
-    if (!trackQuestionIds.has(qId)) return false;
-    const targetQ = QUESTION_BANK.find((q) => q.id === qId);
-    return targetQ && targetQ.correctIndex === ans;
-  }).length;
-
   const handleOpenTelegramUnlock = () => {
     window.open('https://t.me/+2OhLLu7ofSoxNTNk', '_blank');
   };
@@ -488,17 +497,15 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
         </div>
 
         {/* Track Banner inside Quiz Modal */}
-        {studentTrack && (
-          <div className="bg-yellow-400 text-slate-950 px-3.5 py-2 text-xs font-bold flex items-center justify-between border-b border-amber-500/30 shrink-0">
-            <span className="flex items-center gap-2 font-black">
-              <span>🎯</span>
-              <span>مواد شعبتك: <span className="underline decoration-slate-950/40">{studentTrack}</span> ({trackQuestions.length} سؤال متاح)</span>
-            </span>
-            <span className="text-[10px] bg-slate-950 text-yellow-400 px-2.5 py-0.5 rounded-full font-bold">
-              {subjects.length - 1} مواد دراسية
-            </span>
-          </div>
-        )}
+        <div className="bg-yellow-400 text-slate-950 p-2.5 text-xs font-bold flex items-center justify-between border-b border-amber-500/30 shrink-0">
+          <span className="flex items-center gap-2 font-black text-xs sm:text-sm">
+            <span>🎯</span>
+            <span>بنك أسئلة: {studentTrack || 'الثانوية العامة'} - {trackQuestions.length} سؤال</span>
+          </span>
+          <span className="text-[10px] bg-slate-950 text-yellow-400 px-2.5 py-0.5 rounded-full font-bold">
+            {subjects.filter((s) => s !== 'all').length} مواد دراسية مخصصة
+          </span>
+        </div>
 
         {/* Floating XP Banner */}
         {xpBanner && (

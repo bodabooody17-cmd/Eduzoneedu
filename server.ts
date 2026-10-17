@@ -18,6 +18,99 @@ app.use(express.json());
 const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID || 'b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0';
 
 import { db } from './src/db/userTrackingDb';
+import { GoogleGenAI } from '@google/genai';
+
+function getTopicForBatch(b: number): string {
+  const topics = [
+    "1-3: المشتقات اسم الفاعل واسم المفعول وصيغ المبالغة",
+    "4-6: المصادر كلها الميمي والصناعي والمرة والهيئة",
+    "7-9: البلاغة التشبيه وانواعه",
+    "10-12: الاستعارة والكناية والمجاز المرسل",
+    "13-15: المحسنات البديعية والاساليب الخبرية والانشائية",
+    "16-18: النحو المبتدأ والخبر والنواسخ",
+    "19-21: التوابع والمنصوبات والمجرورات",
+    "22-24: اسئلة متوقعة واجابات ونصائح ليلة الامتحان"
+  ];
+  return topics[b - 1] || 'النحو والبلاغة الذهبية';
+}
+
+// AI 24-Page Booklet Generator Endpoint (Gemini 3.8 Flash via @google/genai)
+app.post('/api/ai/generate-batch', async (req: Request, res: Response) => {
+  try {
+    const { batch, customApiKey, customPrompt } = req.body || {};
+    const batchNum = parseInt(batch, 10);
+    if (!batchNum || batchNum < 1 || batchNum > 8) {
+      return res.status(400).json({ success: false, error: 'batch must be between 1 and 8' });
+    }
+
+    const key = (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) || process.env.GEMINI_API_KEY;
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        error: 'يرجى إدخال مفتاح Gemini API Key في الحقل المخصص أو ضبطه في متغيرات البيئة.',
+      });
+    }
+
+    const startPage = (batchNum - 1) * 3 + 1;
+    const endPage = batchNum * 3;
+    const topic = getTopicForBatch(batchNum);
+
+    const prompt =
+      customPrompt ||
+      `اكتب صفحات ${startPage} الى ${endPage} فقط من مذكرة النحو والبلاغة الذهبية - ثانوية عامة
+كل صفحة 500 كلمة كاملة بالتفصيل
+التزم بهذا الشكل بالحرف:
+[بداية صفحة ${startPage}] محتوى صفحة ${startPage} 500 كلمة [نهاية صفحة ${startPage}]
+[بداية صفحة ${startPage + 1}] محتوى صفحة ${startPage + 1} 500 كلمة [نهاية صفحة ${startPage + 1}]
+[بداية صفحة ${endPage}] محتوى صفحة ${endPage} 500 كلمة [نهاية صفحة ${endPage}]
+الموضوع: ${topic}`;
+
+    const ai = new GoogleGenAI({ apiKey: key });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+      config: {
+        maxOutputTokens: 8000,
+        temperature: 0.5,
+      },
+    });
+
+    const rawText = response.text || '';
+    const regex = /\[بداية صفحة \d+\]([\s\S]*?)\[نهاية صفحة \d+\]/g;
+    let m;
+    const pages: { pageNumber: number; content: string }[] = [];
+    let pNum = startPage;
+    while ((m = regex.exec(rawText)) !== null) {
+      pages.push({
+        pageNumber: pNum,
+        content: m[1].trim(),
+      });
+      pNum++;
+    }
+
+    if (pages.length === 0 && rawText.trim()) {
+      pages.push({
+        pageNumber: startPage,
+        content: rawText.trim(),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      batch: batchNum,
+      startPage,
+      endPage,
+      pages,
+      rawText,
+    });
+  } catch (err: any) {
+    console.error('Error in /api/ai/generate-batch:', err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'فشل توليد محتوى الدفعة بالذكاء الاصطناعي',
+    });
+  }
+});
 
 // OneSignal Push Notification REST API endpoint
 app.post('/api/send-notification', async (req: Request, res: Response) => {

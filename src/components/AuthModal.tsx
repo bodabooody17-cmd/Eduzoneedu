@@ -204,7 +204,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       localStorage.setItem('eduzone_user', JSON.stringify(newUser));
       localStorage.setItem('eduzone_theme', 'dark');
       if (role === 'student') {
-        localStorage.setItem('EduZone_Track', stage);
+        // تثبيت الشعبة لأول مرة فقط وعدم تغييرها
+        if (!localStorage.getItem('EduZone_Track')) {
+          localStorage.setItem('EduZone_Track', stage);
+        }
       }
       // Award login bonus points
       awardPoints(50, 'تسجيل دخول ناجح برقم الهاتف', 'login');
