@@ -10,6 +10,7 @@ interface SummaryCardProps {
   onToggleSave: (id: string) => void;
   isCommerce?: boolean;
   onOpenVipPayment?: () => void;
+  onOpenBooklet?: (item: SummaryItem) => void;
 }
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({
@@ -18,6 +19,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   onDownloadPdf,
   isSaved,
   onToggleSave,
+  onOpenBooklet,
 }) => {
   const isPaid = item.planType === 'paid';
 
@@ -36,9 +38,18 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
             >
               {isPaid ? 'مدفوع (VIP)' : 'مجاني'}
             </span>
-            {item.id === 'arab-01' && (
+            {onOpenBooklet ? (
+              <button
+                type="button"
+                onClick={() => onOpenBooklet(item)}
+                title="فتح مولد وقارئ الـ 24 صفحة الذهبية"
+                className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 hover:bg-yellow-400/30 border border-yellow-400/40 flex items-center gap-1 transition cursor-pointer"
+              >
+                ✨ 24 صفحة (AI)
+              </button>
+            ) : (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 flex items-center gap-1">
-                ✨ ذهبية 24 صفحة
+                ✨ 24 صفحة (AI)
               </span>
             )}
             <span className="text-xs font-semibold text-slate-400">

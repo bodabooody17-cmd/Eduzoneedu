@@ -35,6 +35,7 @@ interface StudentProfileModalProps {
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
   onUpdateUser?: (updated: StudentUser) => void;
+  onOpenChangeTrack?: () => void;
 }
 
 export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
@@ -50,6 +51,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   onOpenPricingModal,
   onOpenSupervisorDashboard,
   onUpdateUser,
+  onOpenChangeTrack,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<StudentProgress>(getStudentProgress);
@@ -242,6 +244,28 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       {currentUser.contact}
                     </span>
                   </div>
+                </div>
+
+                {/* Track Badge & Change Track Button */}
+                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                  <div className="text-right">
+                    <span className="text-slate-400 block text-[10px]">الشعبة الدراسية:</span>
+                    <span className="font-bold text-yellow-400 text-xs">
+                      {localStorage.getItem('EduZone_Track') || 'لم تحدد بعد'}
+                    </span>
+                  </div>
+                  {onOpenChangeTrack && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenChangeTrack();
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-[11px] transition cursor-pointer shadow-sm"
+                    >
+                      تغيير الشعبة
+                    </button>
+                  )}
                 </div>
               </div>
 

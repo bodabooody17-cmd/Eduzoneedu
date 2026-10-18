@@ -27,6 +27,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { AndroidFrame } from './components/AndroidFrame';
 import { GoldenArabicBookletModal } from './components/GoldenArabicBookletModal';
+import { ChangeTrackModal } from './components/ChangeTrackModal';
 import { downloadSummaryAsDocument } from './utils/downloadHelper';
 import { getStudentProgress, StudentProgress } from './utils/gamification';
 import {
@@ -46,6 +47,7 @@ import {
   X,
   ArrowRight,
   ArrowLeft,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function App() {
@@ -137,6 +139,8 @@ export default function App() {
   const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
   const [isCreatorModalOpen, setIsCreatorModalOpen] = useState(false);
   const [isGoldenArabicModalOpen, setIsGoldenArabicModalOpen] = useState(false);
+  const [selectedBookletItem, setSelectedBookletItem] = useState<SummaryItem | null>(null);
+  const [isChangeTrackModalOpen, setIsChangeTrackModalOpen] = useState(false);
 
   const handleOpenNotifications = () => {
     setIsNotificationsOpen(true);
@@ -292,12 +296,15 @@ export default function App() {
   const handleLogout = () => {
     try {
       localStorage.removeItem('eduzone_user');
-      // EduZone_Track is permanently fixed and not removed on logout
+      localStorage.removeItem('EduZone_Track');
+      localStorage.removeItem('userBranch');
     } catch (e) {
       console.error(e);
     }
     setCurrentUser(null);
+    setMyTrack(null);
     setIsProfileModalOpen(false);
+    window.dispatchEvent(new Event('eduzone_track_changed'));
   };
 
   const handleOnboardingFinish = (action: 'register' | 'guest') => {
@@ -332,11 +339,19 @@ export default function App() {
       return;
     }
     requireAuth(`قراءة مذكرة ${item.title}`, () => {
-      if (item.id === 'arab-01') {
-        setIsGoldenArabicModalOpen(true);
-      } else {
-        setViewingSummary(item);
-      }
+      setViewingSummary(item);
+    });
+  };
+
+  const handleOpenBooklet = (item: SummaryItem) => {
+    const track = trackStorageName || (myTrack?.name || '');
+    if (track && !isAllowedForTrack(`${item.title} ${item.subject}`, track)) {
+      alert(`هذه المادة غير متاحة لشعبتك: ${track}`);
+      return;
+    }
+    requireAuth(`فتح مذكرة الـ 24 صفحة لمادة ${item.subject}`, () => {
+      setSelectedBookletItem(item);
+      setIsGoldenArabicModalOpen(true);
     });
   };
 
@@ -673,10 +688,21 @@ export default function App() {
           />
 
           <div id="browse-sections" className="w-full px-3 space-y-6 pb-6">
-            {/* بنر الشعبة الدراسية المسجلة */}
+            {/* بنر الشعبة الدراسية المسجلة مع زر تغيير الشعبة */}
             {myTrack && (
-              <div className="bg-yellow-400 text-black p-3 rounded-xl m-3 text-center font-bold">
-                <span>📚 موادك: {myTrack?.name || trackStorageName}</span>
+              <div className="bg-yellow-400 text-black p-3.5 rounded-2xl m-3 flex items-center justify-between font-bold shadow-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📚</span>
+                  <span>موادك: {myTrack?.name || trackStorageName}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsChangeTrackModalOpen(true)}
+                  className="bg-slate-950 hover:bg-black text-yellow-400 px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow cursor-pointer active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>تغيير الشعبة</span>
+                </button>
               </div>
             )}
 
@@ -849,6 +875,7 @@ export default function App() {
                         onToggleSave={handleToggleSave}
                         isCommerce={false}
                         onOpenVipPayment={() => setIsPricingModalOpen(true)}
+                        onOpenBooklet={handleOpenBooklet}
                       />
                     ))}
                     {myTrack && filteredSummaries.length === 0 && (
@@ -901,6 +928,7 @@ export default function App() {
                       onToggleSave={handleToggleSave}
                       isCommerce={false}
                       onOpenVipPayment={() => setIsPricingModalOpen(true)}
+                      onOpenBooklet={handleOpenBooklet}
                     />
                   ))}
                 </div>
@@ -947,6 +975,7 @@ export default function App() {
                       onToggleSave={handleToggleSave}
                       isCommerce={item.track === 'commerce_diploma'}
                       onOpenVipPayment={() => setIsPricingModalOpen(true)}
+                      onOpenBooklet={handleOpenBooklet}
                     />
                   ))}
                 </div>
@@ -1004,6 +1033,7 @@ export default function App() {
                         onToggleSave={handleToggleSave}
                         isCommerce={false}
                         onOpenVipPayment={() => setIsPricingModalOpen(true)}
+                        onOpenBooklet={handleOpenBooklet}
                       />
                     ))}
                   </div>
@@ -1181,6 +1211,7 @@ export default function App() {
             setIsSupervisorModalOpen(true);
           }}
           onUpdateUser={(updated) => setCurrentUser(updated)}
+          onOpenChangeTrack={() => setIsChangeTrackModalOpen(true)}
         />
 
         {/* Supervisor Control Panel & Broadcast Dashboard */}
@@ -1198,12 +1229,28 @@ export default function App() {
           item={viewingSummary}
           onClose={() => setViewingSummary(null)}
           onDownloadPdf={handleDownloadPdf}
-          onOpenGoldenBooklet={() => setIsGoldenArabicModalOpen(true)}
+          onOpenGoldenBooklet={() => {
+            setSelectedBookletItem(viewingSummary);
+            setIsGoldenArabicModalOpen(true);
+          }}
         />
 
         <GoldenArabicBookletModal
           isOpen={isGoldenArabicModalOpen}
-          onClose={() => setIsGoldenArabicModalOpen(false)}
+          onClose={() => {
+            setIsGoldenArabicModalOpen(false);
+            setSelectedBookletItem(null);
+          }}
+          item={selectedBookletItem}
+        />
+
+        <ChangeTrackModal
+          isOpen={isChangeTrackModalOpen}
+          onClose={() => setIsChangeTrackModalOpen(false)}
+          currentTrackName={trackStorageName || myTrack?.name || ''}
+          onSelectTrack={() => {
+            setMyTrack(getMyTrackData());
+          }}
         />
 
         <VideoPlayerModal

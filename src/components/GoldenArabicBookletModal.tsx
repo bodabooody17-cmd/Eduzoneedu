@@ -14,37 +14,44 @@ import {
   Check,
 } from 'lucide-react';
 import { SUMMARY_ITEMS } from '../data/coursesData';
+import { SummaryItem } from '../types';
 import { downloadSummaryAsDocument } from '../utils/downloadHelper';
 
 interface GoldenArabicBookletModalProps {
   isOpen: boolean;
   onClose: () => void;
+  item?: SummaryItem | null;
 }
 
 export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> = ({
   isOpen,
   onClose,
+  item,
 }) => {
-  // Pre-load the 24 master pages from arab-01 in coursesData
+  const currentItem = item || SUMMARY_ITEMS.find((s) => s.id === 'arab-01') || SUMMARY_ITEMS[0];
+  const subjectName = currentItem.subject || 'اللغة العربية';
+  const bookletTitle = currentItem.title || `مذكرة ${subjectName} الذهبية`;
+  const storageKey = `eduzone_booklet_${currentItem.id}_pages`;
+
+  // Pre-load pages from currentItem if available
   const defaultPages = useMemo(() => {
-    const arabItem = SUMMARY_ITEMS.find((s) => s.id === 'arab-01');
-    if (arabItem && arabItem.pages && arabItem.pages.length > 0) {
-      return arabItem.pages.map((p) => {
+    if (currentItem && currentItem.pages && currentItem.pages.length > 0) {
+      return currentItem.pages.map((p: any) => {
         const titleLine = `📌 [${p.title}]`;
         const contentLines = p.content.join('\n\n');
         const formulas = p.keyFormulas && p.keyFormulas.length > 0
-          ? `\n\n⚡ القوانين الذهبية:\n${p.keyFormulas.map((f) => `• ${f}`).join('\n')}`
+          ? `\n\n⚡ القوانين الذهبية:\n${p.keyFormulas.map((f: string) => `• ${f}`).join('\n')}`
           : '';
         const tip = p.examTip ? `\n\n💡 نصيحة ليلة الامتحان: ${p.examTip}` : '';
         return `${titleLine}\n\n${contentLines}${formulas}${tip}`;
       });
     }
     return [];
-  }, []);
+  }, [currentItem]);
 
   const [allPages, setAllPages] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('eduzone_golden_arabic_pages');
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -71,18 +78,138 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
 
   if (!isOpen) return null;
 
-  function getTopicForBatch(b: number): string {
+  function getTopicForBatch(sub: string, b: number): string {
+    const norm = (sub || '').trim();
+    if (norm.includes('فيزياء') || norm.includes('Physics')) {
+      const list = [
+        '1-3: التيار الكهربي وقانون أوم وتوصيل المقاومات',
+        '4-6: قانونا كيرشوف وتحليل المسارات المعقدة',
+        '7-9: التأثير المغناطيسي للتيار الكهربي',
+        '10-12: القوة المغناطيسية وعزم الازدواج وأجهزة القياس',
+        '13-15: الحث الكهرومغناطيسي وقانون فاراداي ولنز',
+        '16-18: الدينامو ومولد التيار المتردد والمحول الكهربي',
+        '19-21: دوائر التيار المتردد والرنين',
+        '22-24: فيزياء حديثة وازدواجية الموجة والجسيم والليزر',
+      ];
+      return list[b - 1] || 'الفيزياء الحديثة والكهرومغناطيسية';
+    }
+    if (norm.includes('كيمياء') || norm.includes('Chemistry')) {
+      const list = [
+        '1-3: العناصر الانتقالية والسلسلة الأولى وحالات التأكسد',
+        '4-6: خامات الحديد وتفاعلات أكاسيد الحديد والسبائك',
+        '7-9: التحليل الكيميائي الوصفي والأنيونات والكاتيونات',
+        '10-12: التحليل الحجمي وقوانين المعايرة والتطاير والترسيب',
+        '13-15: الاتزان الكيميائي والأيوني وقاعدة لوشاتيليه',
+        '16-18: الكيمياء الكهربية والخلايا الجلفانية وفاراداي',
+        '19-21: الكيمياء العضوية: الهيدروكربونات الأليفاتية',
+        '22-24: مشتقات الهيدروكربونات (كحولات، فينولات، أحماض، أسترات)',
+      ];
+      return list[b - 1] || 'الكيمياء العامة والعضوية';
+    }
+    if (norm.includes('أحياء') || norm.includes('احياء')) {
+      const list = [
+        '1-3: الدعامة والحركة في النبات والإنسان',
+        '4-6: التنسيق الهرموني والغدد الصماء ووظائف الهرمونات',
+        '7-9: التكاثر في الكائنات الحية والنباتات الزهرية',
+        '10-12: التكاثر في الإنسان والإخصاب والحمل',
+        '13-15: المناعة في النبات والتركيب المناعي للإنسان',
+        '16-18: آليات الاستجابة المناعية الخلطية والخلوية',
+        '19-21: الحمض النووي DNA وتضاعفه وإصلاح عيوبه',
+        '22-24: الحمض النووي RNA وتخليق البروتين والهندسة الوراثية',
+      ];
+      return list[b - 1] || 'الأحياء والوراثة';
+    }
+    if (norm.includes('جيولوجيا')) {
+      const list = [
+        '1-3: كوكب الأرض ومكوناته وأغلفته',
+        '4-6: الطيات والفوالق والفواصل وأسطح عدم التوافق',
+        '7-9: المعادن والأنظمة البلورية والخواص الفيزيائية',
+        '10-12: دورة الصخور وأنواع الصخور والبراكين',
+        '13-15: الحركات الأرضية وتكتونية الألواح والزلازل',
+        '16-18: التجوية وعوامل النقل والتفتيت والترسيب',
+        '19-21: مفاهيم البيئة والنظم البيئية البحرية والصحراوية',
+        '22-24: استنزاف الموارد الطبيعية وحماية البيئة',
+      ];
+      return list[b - 1] || 'الجيولوجيا وعلوم البيئة';
+    }
+    if (norm.includes('بحتة') || norm.includes('تفاضل') || norm.includes('تكامل') || norm.includes('جبر')) {
+      const list = [
+        '1-3: اشتقاق الدوال المثلثية والاشتقاق الضمني والبارامتري',
+        '4-6: تطبيقات التفاضل والمعدلات الزمنية والقيم العظمى والصغرى',
+        '7-9: تفاضل وتكامل الدوال الأسية واللوغاريتمية الطبيعية',
+        '10-12: سلوك الدالة وفترات التحدب ونقاط الانقلاب',
+        '13-15: طرق التكامل بالتجزيء والتعويض والمساحات والحجوم',
+        '16-18: الجبر: مبدأ العد، التباديل والتوافيق، وذات الحدين',
+        '19-21: الأعداد المركبة ونظرية دي موافر والصورة المثلثية',
+        '22-24: المحددات والمصفوفات ومعادلة المستقيم والمستوى في الفراغ',
+      ];
+      return list[b - 1] || 'الرياضيات البحتة';
+    }
+    if (norm.includes('تطبيقية') || norm.includes('استاتيكا') || norm.includes('ديناميكا')) {
+      const list = [
+        '1-3: الاحتكاك على مستوى أفقي ومستوى مائل خشن',
+        '4-6: عزوم القوى في المستوى ثنائي وثلاثي الأبعاد',
+        '7-9: القوى المتوازية المستوية والاتزان العام للأجسام',
+        '10-12: الازدواجات ومركز الثقل وطريقة الكتل السالبة',
+        '13-15: تفاضل وتكامل الدوال المتجهة والسرعة والعجلة',
+        '16-18: كمية الحركة وقوانين نيوتن الثلاثة للحركة',
+        '19-21: حركة المصاعد وحركة الأجسام على البكرات والمستويات',
+        '22-24: الدفع والتصادم والشغل وطاقة الحركة والوضع والقدرة',
+      ];
+      return list[b - 1] || 'الرياضيات التطبيقية';
+    }
+    if (norm.includes('تاريخ')) {
+      const list = [
+        '1-3: الحملة الفرنسية على مصر والشام ومقاومة المصريين',
+        '4-6: خروج الفرنسيين وتولية محمد علي حكم مصر',
+        '7-9: بناء الدولة الحديثة ونظام الاحتكار الاقتصادي',
+        '10-12: سياسة مصر الخارجية وخلفاء محمد علي والأزمة المالية',
+        '13-15: الثورة العرابية والاحتلال البريطاني وكفاح مصطفى كامل',
+        '16-18: ثورة 1919 وتصريح 28 فبراير ومعاهدة 1936',
+        '19-21: ثورة 23 يوليو 1952 وإنجازاتها الشاملة',
+        '22-24: القضية الفلسطينية والحروب العربية الإسرائيلية وثورات مصر',
+      ];
+      return list[b - 1] || 'التاريخ الحديث';
+    }
+    if (norm.includes('جغرافيا')) {
+      const list = [
+        '1-3: مدخل لدراسة الجغرافيا السياسية والدولة ومفاهيمها',
+        '4-6: المقومات الطبيعية لقوة الدولة وموقعها وتضاريسها',
+        '7-9: المقومات البشرية لقوة الدولة والسكان والتكنولوجيا',
+        '10-12: النظام السياسي والانتخابي والحدود السياسية وتطورها',
+        '13-15: أنواع الحدود السياسية الطبيعية والهندسية والبشرية',
+        '16-18: المشكلات السياسية والاقتصادية والنزاعات المائية والدولية',
+        '19-21: التكتلات الاقتصادية الكبرى والأحلاف العسكرية العالمية',
+        '22-24: النظام العالمي الجديد وتأثيراته ونواتج التعلم',
+      ];
+      return list[b - 1] || 'الجغرافيا السياسية';
+    }
+    if (norm.includes('فلسفة') || norm.includes('منطق')) {
+      const list = [
+        '1-3: الفلسفة وقضايا البيئة ومراحل علاقة الإنسان بالبيئة',
+        '4-6: الأخلاق البيولوجية والطبية (البيوتيقا) وتطبيقاتها',
+        '7-9: الأخلاق المهنية والمسؤولية وأخلاقيات العمل',
+        '10-12: التفلسف وعلاقته بالقيم والحرية الإنسانية',
+        '13-15: الاستدلال الاستقرائي وتطبيقه في العلوم الطبيعية',
+        '16-18: الاستنباط والنسق الرياضي وصياغة الحجج المنطقية',
+        '19-21: التكامل بين الاستقراء والاستنباط في المنهج المعاصر',
+        '22-24: المنطق وتكنولوجيا الاتصال والذكاء الاصطناعي والمغالطات',
+      ];
+      return list[b - 1] || 'الفلسفة والمنطق';
+    }
+
+    // Default Arabic
     const topics = [
       '1-3: المشتقات اسم الفاعل واسم المفعول وصيغ المبالغة',
       '4-6: المصادر كلها الميمي والصناعي والمرة والهيئة',
-      '7-9: البلاغة التشبيه وانواعه',
+      '7-9: البلاغة التشبيه وأنواعه وصور الجمال',
       '10-12: الاستعارة والكناية والمجاز المرسل',
-      '13-15: المحسنات البديعية والاساليب الخبرية والانشائية',
+      '13-15: المحسنات البديعية والأساليب الإنشائية والخبرية',
       '16-18: النحو المبتدأ والخبر والنواسخ',
       '19-21: التوابع والمنصوبات والمجرورات',
-      '22-24: اسئلة متوقعة واجابات ونصائح ليلة الامتحان',
+      '22-24: أسئلة متوقعة وإعراب الثوابت ونصائح ليلة الامتحان',
     ];
-    return topics[b - 1] || 'النحو والبلاغة الذهبية';
+    return topics[b - 1] || `مذكرة ${sub} الذهبية`;
   }
 
   // AI 24-Page Batch Generator (8 batches, 3 pages each)
@@ -94,11 +221,11 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
       const startPage = (batch - 1) * 3 + 1;
       const endPage = batch * 3;
 
-      setLoaderText(`⏳ بولد صفحات ${startPage} لـ ${endPage} من 24 ...`);
+      setLoaderText(`⏳ بولد صفحات ${startPage} لـ ${endPage} من 24 لمادة ${subjectName}...`);
       setGenBtnText(`جاري ${endPage} / 24`);
 
-      const topic = getTopicForBatch(batch);
-      const prompt = `اكتب صفحات ${startPage} الى ${endPage} فقط من مذكرة النحو والبلاغة الذهبية - ثانوية عامة
+      const topic = getTopicForBatch(subjectName, batch);
+      const prompt = `اكتب صفحات ${startPage} الى ${endPage} فقط من ${bookletTitle} - ثانوية عامة / شهادات معتمدة
 كل صفحة 500 كلمة كاملة بالتفصيل
 التزم بهذا الشكل بالحرف:
 [بداية صفحة ${startPage}] محتوى صفحة ${startPage} 500 كلمة [نهاية صفحة ${startPage}]
@@ -139,6 +266,8 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               batch,
+              subject: subjectName,
+              subjectTitle: bookletTitle,
               customPrompt: prompt,
             }),
           });
@@ -156,11 +285,11 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
         console.error('Error generating batch:', e);
       }
 
-      // Rest 1 second between batches
-      await new Promise((r) => setTimeout(r, 1000));
+      // Rest 800ms between batches
+      await new Promise((r) => setTimeout(r, 800));
     }
 
-    setLoaderText('✅ خلصت 24 صفحة كاملة');
+    setLoaderText(`✅ خلصت 24 صفحة كاملة لمادة ${subjectName}`);
     setGenBtnText('✅ تم - 24 صفحة جاهزة');
     setIsGenerating(false);
     setCurrent(0);
@@ -168,7 +297,7 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
     if (newPages.length > 0) {
       setAllPages(newPages);
       try {
-        localStorage.setItem('eduzone_golden_arabic_pages', JSON.stringify(newPages));
+        localStorage.setItem(storageKey, JSON.stringify(newPages));
       } catch (err) {
         console.error(err);
       }
@@ -177,17 +306,27 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
 
   const handleResetDefault = () => {
     try {
-      localStorage.removeItem('eduzone_golden_arabic_pages');
+      localStorage.removeItem(storageKey);
     } catch {}
     setAllPages(defaultPages);
     setCurrent(0);
-    setLoaderText('تمت استعادة النسخة الوزارية المعتمدة (24 صفحة)');
+    setLoaderText(`تمت استعادة النسخة المعتمدة لمادة ${subjectName}`);
   };
 
   const handleDownload = () => {
-    const arabItem = SUMMARY_ITEMS.find((s) => s.id === 'arab-01');
-    if (arabItem) {
-      downloadSummaryAsDocument(arabItem);
+    if (allPages && allPages.length > 0) {
+      const tempItem: any = {
+        ...currentItem,
+        pagesCount: allPages.length,
+        pages: allPages.map((pText, idx) => ({
+          pageNumber: idx + 1,
+          title: `صفحة ${idx + 1} - ${subjectName}`,
+          content: pText.split('\n').filter((l) => l.trim().length > 0),
+        })),
+      };
+      downloadSummaryAsDocument(tempItem);
+    } else {
+      downloadSummaryAsDocument(currentItem);
     }
   };
 
@@ -206,7 +345,7 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
     .filter((l) => l.length > 0);
 
   const currentBatchNum = Math.min(8, Math.floor(current / 3) + 1);
-  const currentBatchTopic = getTopicForBatch(currentBatchNum);
+  const currentBatchTopic = getTopicForBatch(subjectName, currentBatchNum);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0f1220]/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 text-white font-sans text-right animate-fadeIn">
@@ -220,14 +359,14 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
             <div>
               <div className="flex items-center gap-2">
                 <span className="bg-blue-900/60 text-blue-200 border border-blue-700/40 text-[10px] px-2.5 py-0.5 rounded-full font-bold">
-                  ثانوية عامة (علمي / أدبي)
+                  {currentItem.trackLabel || 'ثانوية عامة (علمي / أدبي)'}
                 </span>
                 <span className="bg-[#fbbf24]/20 text-[#fbbf24] border border-[#fbbf24]/30 text-[10px] px-2 py-0.5 rounded-full font-bold">
                   24 صفحة كاملة
                 </span>
               </div>
               <h1 className="font-black text-sm sm:text-base text-white mt-1">
-                مذكرة النحو والبلاغة الذهبية (24 صفحة)
+                {bookletTitle} (24 صفحة)
               </h1>
             </div>
           </div>
