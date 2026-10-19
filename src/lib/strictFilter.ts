@@ -4,7 +4,7 @@ export const STRICT_SUBJECTS = {
   "أدبي": ["تاريخ", "جغرافيا", "فلسفة", "منطق", "علم نفس", "اجتماع", "عربي", "انجليزي", "فرنساوي"],
   "تجارة": ["محاسبة", "ادارة", "اقتصاد", "احصاء", "قانون", "حاسب", "تجاري"],
   "صنايع": ["رسم فني", "ميكانيكا", "كهرباء", "الكترونيات", "حاسب", "صناعي"],
-  "لغات": ["Physics", "Chemistry", "Biology", "Math"],
+  "لغات": ["Physics", "Chemistry", "Biology", "Math", "Statics"],
   "ICDL": ["ICDL", "Word", "Excel"]
 };
 
@@ -47,6 +47,14 @@ export function isAllowedForTrack(materialTitle: string, studentTrack: string): 
   // لو دبلوم صنايع، امنع مواد علمي وأدبي وتجارة
   if (studentTrack.includes('صنايع')) {
     if (["فيزياء", "كيمياء", "أحياء", "جيولوجيا", "تاريخ", "جغرافيا", "فلسفة", "منطق", "علم نفس", "محاسبة", "تسويق", "ادارة", "تجاري"].some(k => title.includes(k.toLowerCase()))) {
+      return false;
+    }
+    return true;
+  }
+
+  // لو مدارس لغات
+  if (studentTrack.includes('لغات') || studentTrack.toLowerCase().includes('lang')) {
+    if (["تاريخ", "جغرافيا", "فلسفة", "منطق", "علم نفس", "اجتماع", "محاسبة", "ادارة", "تجاري", "رسم فني", "ميكانيكا", "صناعي"].some(k => title.includes(k.toLowerCase()))) {
       return false;
     }
     return true;

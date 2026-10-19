@@ -7,6 +7,15 @@ import { PSYCHOLOGY_PAGES_24 } from './subjectPages/psychologyPages';
 import { ENGLISH_PAGES_24 } from './subjectPages/englishPages';
 import { BIOLOGY_PAGES_24 } from './subjectPages/biologyPages';
 import { GEOGRAPHY_PAGES_24 } from './subjectPages/geographyPages';
+import { STATICS_PAGES_24 } from './subjectPages/staticsPages';
+import { PURE_MATH_PAGES_24 } from './subjectPages/pureMathPages';
+import { PURE_MATH_LANG_PAGES_24 } from './subjectPages/pureMathLangPages';
+import { STATICS_LANG_PAGES_24 } from './subjectPages/staticsLangPages';
+import { PHYSICS_LANG_PAGES_24 } from './subjectPages/physicsLangPages';
+import { CHEMISTRY_LANG_PAGES_24 } from './subjectPages/chemistryLangPages';
+import { BIOLOGY_LANG_PAGES_24 } from './subjectPages/biologyLangPages';
+import { COMMERCE_PAGES_24 } from './subjectPages/commercePages';
+import { INDUSTRIAL_PAGES_24 } from './subjectPages/industrialPages';
 
 export const SUMMARY_ITEMS: SummaryItem[] = [
   {
@@ -456,75 +465,41 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
   },
   {
     id: 'com-acc-01',
-    title: 'مبادئ المحاسبة المالية وقيود اليومية للدبلومات',
+    title: 'مذكرة المحاسبة المالية والشركات الذهبية (24 صفحة كاملة)',
     subject: 'المحاسبة المالية',
     track: 'commerce_diploma',
     trackLabel: 'دبلوم تجارة 3 و 5 سنوات',
-    description: 'دليل عملي شامل لحسابات الأستاذ، ميزان المراجعة، قيود الإقفال، والتسويات الجردية المعتمدة.',
+    description: 'دليل عملي شامل للقيد المزدوج، اليومية، الأستاذ، ميزان المراجعة، التسويات الجردية، شركات الأشخاص والأموال، وإدارة الأعمال وقانون العمل في 24 صفحة مفصلة.',
     author: 'أ/ رأفت سلامة',
-    pagesCount: 22,
-    fileSize: '4.8 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.3 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
     featured: true,
     colorScheme: 'cyan',
-    tags: ['محاسبة', 'قيود يومية', 'دبلوم تجارة', 'تسويات'],
+    tags: ['محاسبة', 'قيود يومية', 'دبلوم تجارة', 'تسويات', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'معادلة الميزانية ونظرية القيد المزدوج',
-        content: [
-          'معادلة المركز المالي: الأصول = الخصوم (الالتزامات) + حقوق الملكية.',
-          'طبيعة الحسابات: الأصول والمصروفات طبيعتها مدينة (تزيد مدين وتنقص دائن). الخصوم والإيرادات وحقوق الملكية طبيعتها دائنة (تزيد دائن وتنقص مدين).',
-          'تسجيل قيد اليومية: من حـ/ المدين إلى حـ/ الدائن مع شرح مختصر للعملية المالية.'
-        ],
-        keyFormulas: ['Assets = Liabilities + Equity', 'Debit = Credit always'],
-        examTip: 'تأكد دائماً أن طرفي القيد متساويان في القيمة الرياضية قبل الانتقال للقيد التالي.'
-      },
-      {
-        pageNumber: 2,
-        title: 'الحسابات الختامية وقائمة الدخل',
-        content: [
-          'حساب المتاجرة: تحديد مجمل الربح أو مجمل الخسارة = صافي المبيعات - (تكلفة المبيعات).',
-          'حساب الأرباح والخسائر: تحديد صافي الربح = مجمل الربح - المصروفات الإدارية والتشغيلية.',
-          'الميزانية العمومية: توضح الوضع المالي للمنشأة في تاريخ محدد (لحظة زمنية معينة).'
-        ],
-        keyFormulas: ['Gross Profit = Net Sales - COGS', 'Net Income = Gross Profit - Operating Expenses'],
-        examTip: 'بضاعة آخر المدة تظهر في مكانين: في الجانب الدائن لحساب المتاجرة، وفي جانب الأصول المتداولة بالميزانية العمومية.'
-      }
-    ]
+    pages: COMMERCE_PAGES_24
   },
   {
     id: 'tech-ind-01',
-    title: 'أساسيات الرسم الفني والدوائر الكهربائية الصناعية',
+    title: 'مذكرة الرسم الفني والهندسي والميكانيكا والكهرباء الصناعية (24 صفحة كاملة)',
     subject: 'الرسم الفني والصناعي',
     track: 'technical_industrial',
     trackLabel: 'دبلوم صنايع وتكنولوجيا',
-    description: 'شرح هندسي دقيق لمساقط الأشكال، القطاعات الميكانيكية، وقراءة المخططات الكهربائية 2026.',
+    description: 'شرح هندسي متكامل للمساقط الثلاثة، القطاعات، التروس، السيور، المحركات ثلاثية الأوجه، دوائر الكنترول الكلاسيكي، والتبريد والتكييف والسلامة في 24 صفحة.',
     author: 'م/ عادل النجار',
-    pagesCount: 20,
-    fileSize: '6.4 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.8 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
-    featured: false,
+    featured: true,
     colorScheme: 'orange',
-    tags: ['رسم فني', 'مساقط', 'كهرباء صناعية', 'صنايع'],
+    tags: ['رسم فني', 'مساقط', 'كهرباء صناعية', 'صنايع', 'ميكانيكا', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'استنتاج المساقط الثلاثة للأجسام المجسمة',
-        content: [
-          'المسقط الرأسي (Frontal)، المسقط الأفقي (Horizontal)، والمسقط الجانبي (Profile).',
-          'الخطوط غير المرئية ترسم بخطوط متقطعة (Dashed Lines) لتوضيح التجاويف والثقوب الداخلية.',
-          'القطاعات التهشيرية وتحديد أسطح القطع بزاوية 45 درجة.'
-        ],
-        examTip: 'المسقط الأفقي يقع دائماً أسفل المسقط الرأسي مباشرة بنفس العرض والامتداد، والجانبي يقع بجواره بنفس الارتفاع.'
-      }
-    ]
+    pages: INDUSTRIAL_PAGES_24
   },
   {
     id: 'uni-icdl-01',
@@ -607,62 +582,41 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
   },
   {
     id: 'math-01',
-    title: 'ملخص التفاضل والتكامل وقوانين الرياضة البحتة',
+    title: 'مذكرة الرياضيات البحتة الذهبية (تفاضل وتكامل وجبر وفراغية - 24 صفحة كاملة)',
     subject: 'رياضة بحتة',
     track: 'thanawya_science',
     trackLabel: 'ثانوية عامة - علمي رياضة',
-    description: 'كبسولة متكاملة لقواعد اشتقاق وتكامل الدوال المثلثية والأسية، ومسائل المعدلات الزمنية المرتبطة.',
+    description: 'كبسولة متكاملة لقواعد اشتقاق وتكامل الدوال المثلثية والأسية، والمعدلات، ذات الحدين، الأعداد المركبة، أوميجا، والمصفوفات والهندسة الفراغية 2026 في 24 صفحة.',
     author: 'أ/ أحمد عصام',
-    pagesCount: 22,
-    fileSize: '5.4 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.7 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
     featured: true,
     colorScheme: 'indigo',
-    tags: ['رياضة', 'تفاضل', 'تكامل', 'علمي رياضة', 'رياضة بحتة'],
+    tags: ['رياضة', 'تفاضل', 'تكامل', 'علمي رياضة', 'رياضة بحتة', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'قواعد اشتقاق الدوال المثلثية والدوال الأسية واللوغاريتمية',
-        content: [
-          'مشتقة الجا = جتا، ومشتقة الجتا = -جا، ومشتقة الظا = قا².',
-          'مشتقة هـ^س = هـ^س، ومشتقة لوغاريتم س الطبيعي = 1/س.',
-          'التكامل بالتجزيء: ت = ص ع - تكامل (ع دص).'
-        ],
-        examTip: 'في مسائل المعدلات الزمنية، تذكر فرض المتغيرات بدقة ومراعاة إشارة معدل التغير (موجب عند الزيادة وسالب عند النقصان).'
-      }
-    ]
+    pages: PURE_MATH_PAGES_24
   },
   {
     id: 'stat-01',
-    title: 'كبسولة الاستاتيكا والديناميكا وعزوم القوى',
-    subject: 'رياضة تطبيقية',
+    title: 'مذكرة الاستاتيكا الذهبية والاتزان العام (24 صفحة كاملة)',
+    subject: 'استاتيكا',
     track: 'thanawya_science',
     trackLabel: 'ثانوية عامة - علمي رياضة',
-    description: 'شرح قوانين الاحتكاك، عزم الازدواج، مركز الثقل، وقوانين نيوتن الثلاثة للحركة في خط مستقيم.',
+    description: 'شرح قوانين الاحتكاك، عزم القوى في 2D و3D، القوى المتوازية، الاتزان العام، ردود فعل المفصلات، الازدواجات، ومركز الثقل والكتلة السالبة 2026 في 24 صفحة.',
     author: 'أ/ ماهر نيكولا',
-    pagesCount: 18,
-    fileSize: '4.6 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.5 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
-    featured: false,
+    featured: true,
     colorScheme: 'blue',
-    tags: ['استاتيكا', 'ديناميكا', 'رياضة تطبيقية', 'علمي رياضة', 'رياضة'],
+    tags: ['استاتيكا', 'رياضة تطبيقية', 'علمي رياضة', 'رياضة', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'الاتزان العام وعزم الازدواج',
-        content: [
-          'شروط اتزان جسم جاسيء: مجموع القوى = صفر ومجموع العزوم حول أي نقطة = صفر.',
-          'معامل الاحتكاك السكوني م_س = ظا (زاوية الاحتكاك ل).'
-        ],
-        examTip: 'قوة رد الفعل المحصل ح_م = ر √(1 + م_س²).'
-      }
-    ]
+    pages: STATICS_PAGES_24
   },
   {
     id: 'phil-01',
@@ -742,121 +696,136 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
   },
   {
     id: 'com-biz-01',
-    title: 'مبادئ إدارة الأعمال والتسويق التجاري',
+    title: 'مذكرة إدارة الأعمال والتسويق وقوانين التجارة (24 صفحة كاملة)',
     subject: 'ادارة اعمال',
     track: 'commerce_diploma',
     trackLabel: 'دبلوم تجارة 3 و 5 سنوات',
-    description: 'دليل تخطيط وتنظيم المشروعات، المزيج التسويقي 4Ps، وقوانين التجارة والشركات لدبلوم التجارة.',
+    description: 'دليل تخطيط وتنظيم المشروعات، المزيج التسويقي 4Ps، إدارة الموارد البشرية، وقانون العمل المصري والتأمينات في 24 صفحة مفصلة.',
     author: 'أ/ هاني الشافعي',
-    pagesCount: 16,
-    fileSize: '3.7 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.2 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
-    featured: false,
+    featured: true,
     colorScheme: 'cyan',
-    tags: ['تجارة', 'ادارة اعمال', 'تسويق', 'دبلوم تجارة', 'اقتصاد'],
+    tags: ['تجارة', 'ادارة اعمال', 'تسويق', 'دبلوم تجارة', 'اقتصاد', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'وظائف الإدارة والمزيج التسويقي الحديث',
-        content: [
-          'عناصر الإدارة: التخطيط، التنظيم، التوجيه، والرقابة.',
-          'المزيج التسويقي (4Ps): المنتج (Product)، السعر (Price)، المكان والتوزيع (Place)، والترويج (Promotion).'
-        ],
-        examTip: 'التسويق يبدأ قبل إنتاج السلعة بدراسة حاجات المستهلكين ويستمر بعد البيع بخدمات العملاء.'
-      }
-    ]
+    pages: COMMERCE_PAGES_24
   },
   {
     id: 'tech-mech-01',
-    title: 'أساسيات الميكانيكا العامة ودوائر التبريد والتكييف',
+    title: 'مذكرة الميكانيكا العامة ودوائر التبريد والتكييف الصناعية (24 صفحة كاملة)',
     subject: 'ميكانيكا',
     track: 'technical_industrial',
     trackLabel: 'دبلوم صنايع وتكنولوجيا',
-    description: 'شرح دورة التبريد الانضغاطية، الصمامات والمكثفات، وتكنولوجيا التحكم الصناعي الحديث.',
+    description: 'شرح دورة التبريد الانضغاطية، الفريونات الصديقة، نواقل الحركة بالسيور والتروس، والمحامل ومحركات 3-Phase والتحكم الكلاسيكي في 24 صفحة.',
     author: 'م/ سامح عبد العزيز',
-    pagesCount: 19,
-    fileSize: '4.8 MB',
-    term: 'الفصل الدراسي الثاني',
+    pagesCount: 24,
+    fileSize: '6.6 MB',
+    term: 'الفصل الدراسي الأول والثاني',
     year: '2026 / 2027',
     featured: true,
     colorScheme: 'orange',
-    tags: ['صنايع', 'ميكانيكا', 'تبريد وتكييف', 'صناعي', 'تكنولوجيا'],
+    tags: ['صنايع', 'ميكانيكا', 'تبريد وتكييف', 'صناعي', 'تكنولوجيا', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'دورة التبريد الميكانيكية الأساسية',
-        content: [
-          'الأجزاء الرئيسية: الضاغط (Compressor)، المكثف (Condenser)، صمام التمدد (Expansion Valve)، والمبخر (Evaporator).',
-          'وسيط التبريد يتحول من غاز عالي الضغط إلى سائل ثم يتبخر ممتصاً الحرارة من الحيز المراد تبريده.'
-        ],
-        examTip: 'الضاغط يسحب بخار وسيط التبريد بضغط ودرجة حرارة منخفضين ويطرده بضغط ودرجة حرارة مرتفعين نحو المكثف.'
-      }
-    ]
+    pages: INDUSTRIAL_PAGES_24
   },
   {
     id: 'lang-bio-01',
-    title: 'Advanced Biology & Genetics Revision (Languages)',
+    title: 'Golden Biology & Genetics Revision Booklet for Languages (24 Full Pages)',
     subject: 'Biology',
     track: 'languages',
     trackLabel: 'ثانوية عامة لغات',
-    description: 'Comprehensive English summaries covering DNA replication, cellular immunity, and genetics for language schools.',
+    description: 'Complete 24-page guide in English covering Support & Movement, Hormones, Reproduction, Immunity, and Molecular Genetics DNA/RNA 2026.',
     author: 'Dr. Raymond Smith',
-    pagesCount: 18,
-    fileSize: '4.4 MB',
-    term: 'Term 2',
+    pagesCount: 24,
+    fileSize: '6.5 MB',
+    term: 'Full Academic Year',
     year: '2026 / 2027',
     featured: true,
     colorScheme: 'emerald',
-    tags: ['Biology', 'Languages', 'لغات', 'English', 'DNA'],
+    tags: ['Biology', 'Languages', 'لغات', 'English', 'DNA', 'Immunity', '24 Pages'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'Humoral and Cell-Mediated Immunity',
-        content: [
-          'First line of defense: physical and chemical barriers (Skin, Mucus, Tears, HCl).',
-          'Humoral Immunity: B-lymphocytes produce antibodies specific to extracellular antigens.',
-          'Cell-Mediated Immunity: Cytotoxic T-cells (Tc) destroy infected cells using perforin and granzymes.'
-        ],
-        examTip: 'Antibodies cannot enter infected cells; thus, viruses hidden intracellularly are destroyed by cytotoxic T-cells.'
-      }
-    ]
+    pages: BIOLOGY_LANG_PAGES_24
+  },
+  {
+    id: 'lang-stat-01',
+    title: 'Golden Statics & Equilibrium Revision Booklet for Languages (24 Full Pages)',
+    subject: 'Statics',
+    track: 'languages',
+    trackLabel: 'ثانوية عامة لغات',
+    description: 'Comprehensive 24-page guide in English covering Friction, Moments in 2D & 3D, Parallel Forces, General Equilibrium, Couples, and Center of Gravity 2026.',
+    author: 'Eng. Hany Ramzy',
+    pagesCount: 24,
+    fileSize: '6.6 MB',
+    term: 'Full Academic Year',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'indigo',
+    tags: ['Statics', 'Languages', 'لغات', 'Mechanics', 'Equilibrium', '24 Pages'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: STATICS_LANG_PAGES_24
   },
   {
     id: 'lang-math-01',
-    title: 'Pure Mathematics & Calculus for Language Schools',
+    title: 'Golden Pure Mathematics & Calculus Revision Booklet (24 Full Pages)',
     subject: 'Math',
     track: 'languages',
     trackLabel: 'ثانوية عامة لغات',
-    description: 'Formulas and step-by-step problem solutions for differentiation, integration, and related rates.',
+    description: 'Complete 24-page formulas, definitions and exam secrets for Calculus, Algebra, Complex Numbers, Matrices and 3D Solid Geometry for 2026.',
     author: 'Eng. Sherif Fathy',
-    pagesCount: 20,
-    fileSize: '5.0 MB',
-    term: 'Term 2',
+    pagesCount: 24,
+    fileSize: '6.9 MB',
+    term: 'Full Academic Year',
     year: '2026 / 2027',
-    featured: false,
+    featured: true,
     colorScheme: 'blue',
-    tags: ['Math', 'Calculus', 'Languages', 'لغات', 'Physics'],
+    tags: ['Math', 'Calculus', 'Pure Math', 'Languages', 'لغات', '24 Pages'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'Derivatives of Trigonometric & Exponential Functions',
-        content: [
-          'd/dx [sin(x)] = cos(x), d/dx [cos(x)] = -sin(x), d/dx [tan(x)] = sec²(x)',
-          'd/dx [e^x] = e^x, d/dx [ln(x)] = 1/x',
-          'Integration by parts: ∫ u dv = u v - ∫ v du'
-        ],
-        examTip: 'When computing limits involving indeterminate forms (0/0), remember to apply L’Hôpital’s rule carefully.'
-      }
-    ]
+    pages: PURE_MATH_LANG_PAGES_24
+  },
+  {
+    id: 'lang-phys-01',
+    title: 'Golden Physics Revision Booklet for Languages (24 Full Pages)',
+    subject: 'Physics',
+    track: 'languages',
+    trackLabel: 'ثانوية عامة لغات',
+    description: 'Full 24-page syllabus guide covering Current Electricity, Kirchhoff, Electromagnetism, AC Circuits, Modern Physics, and Laser 2026.',
+    author: 'Dr. Peter George',
+    pagesCount: 24,
+    fileSize: '6.8 MB',
+    term: 'Full Academic Year',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'indigo',
+    tags: ['Physics', 'Languages', 'لغات', 'Kirchhoff', 'Modern Physics', '24 Pages'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: PHYSICS_LANG_PAGES_24
+  },
+  {
+    id: 'lang-chem-01',
+    title: 'Golden Chemistry Revision Booklet for Languages (24 Full Pages)',
+    subject: 'Chemistry',
+    track: 'languages',
+    trackLabel: 'ثانوية عامة لغات',
+    description: 'Full 24-page guide covering Transition Elements, Iron, Quantitative & Qualitative Analysis, Chemical Equilibrium, Electrochemistry, and Organic Chemistry.',
+    author: 'Dr. Mark Morris',
+    pagesCount: 24,
+    fileSize: '6.7 MB',
+    term: 'Full Academic Year',
+    year: '2026 / 2027',
+    featured: true,
+    colorScheme: 'emerald',
+    tags: ['Chemistry', 'Languages', 'لغات', 'Organic', 'Electrochemistry', '24 Pages'],
+    planType: 'free',
+    priceBadge: 'مجاني',
+    pages: CHEMISTRY_LANG_PAGES_24
   }
 ];
 

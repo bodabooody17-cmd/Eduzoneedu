@@ -63,11 +63,6 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
   });
 
   const [current, setCurrent] = useState(0);
-  const [apiKey, setApiKey] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [loaderText, setLoaderText] = useState('');
-  const [genBtnText, setGenBtnText] = useState('توليد 24 صفحة بالذكاء الاصطناعي (8 دفعات)');
-  const [showGeneratorPanel, setShowGeneratorPanel] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -212,106 +207,7 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
     return topics[b - 1] || `مذكرة ${sub} الذهبية`;
   }
 
-  // AI 24-Page Batch Generator (8 batches, 3 pages each)
-  const generate24 = async () => {
-    setIsGenerating(true);
-    const newPages: string[] = [];
 
-    for (let batch = 1; batch <= 8; batch++) {
-      const startPage = (batch - 1) * 3 + 1;
-      const endPage = batch * 3;
-
-      setLoaderText(`⏳ بولد صفحات ${startPage} لـ ${endPage} من 24 لمادة ${subjectName}...`);
-      setGenBtnText(`جاري ${endPage} / 24`);
-
-      const topic = getTopicForBatch(subjectName, batch);
-      const prompt = `اكتب صفحات ${startPage} الى ${endPage} فقط من ${bookletTitle} - ثانوية عامة / شهادات معتمدة
-كل صفحة 500 كلمة كاملة بالتفصيل
-التزم بهذا الشكل بالحرف:
-[بداية صفحة ${startPage}] محتوى صفحة ${startPage} 500 كلمة [نهاية صفحة ${startPage}]
-[بداية صفحة ${startPage + 1}] محتوى صفحة ${startPage + 1} 500 كلمة [نهاية صفحة ${startPage + 1}]
-[بداية صفحة ${endPage}] محتوى صفحة ${endPage} 500 كلمة [نهاية صفحة ${endPage}]
-الموضوع: ${topic}`;
-
-      try {
-        let extracted: string[] = [];
-
-        // Check if user provided direct client API key or use server route
-        if (apiKey.trim()) {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { maxOutputTokens: 8000, temperature: 0.5 },
-              }),
-            }
-          );
-          const data = await res.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          const regex = /\[بداية صفحة \d+\]([\s\S]*?)\[نهاية صفحة \d+\]/g;
-          let m;
-          while ((m = regex.exec(text)) !== null) {
-            extracted.push(m[1].trim());
-          }
-          if (extracted.length === 0 && text.trim()) {
-            extracted.push(text.trim());
-          }
-        } else {
-          // Use server route proxy
-          const res = await fetch('/api/ai/generate-batch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              batch,
-              subject: subjectName,
-              subjectTitle: bookletTitle,
-              customPrompt: prompt,
-            }),
-          });
-          const data = await res.json();
-          if (data.success && Array.isArray(data.pages)) {
-            extracted = data.pages.map((p: any) => p.content || p);
-          }
-        }
-
-        if (extracted.length > 0) {
-          newPages.push(...extracted);
-          setAllPages([...newPages]);
-        }
-      } catch (e) {
-        console.error('Error generating batch:', e);
-      }
-
-      // Rest 800ms between batches
-      await new Promise((r) => setTimeout(r, 800));
-    }
-
-    setLoaderText(`✅ خلصت 24 صفحة كاملة لمادة ${subjectName}`);
-    setGenBtnText('✅ تم - 24 صفحة جاهزة');
-    setIsGenerating(false);
-    setCurrent(0);
-
-    if (newPages.length > 0) {
-      setAllPages(newPages);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(newPages));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
-  const handleResetDefault = () => {
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {}
-    setAllPages(defaultPages);
-    setCurrent(0);
-    setLoaderText(`تمت استعادة النسخة المعتمدة لمادة ${subjectName}`);
-  };
 
   const handleDownload = () => {
     if (allPages && allPages.length > 0) {
@@ -373,17 +269,6 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowGeneratorPanel(!showGeneratorPanel)}
-              title="إعدادات المولد بالذكاء الاصطناعي"
-              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                showGeneratorPanel
-                  ? 'bg-[#fbbf24] text-slate-950 border-[#fbbf24]'
-                  : 'bg-[#1a1d2f] text-gray-300 border-[#2a2d45] hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-            </button>
-            <button
               onClick={handleDownload}
               title="تحميل المذكرة كاملة PDF"
               className="bg-[#2a2d45] hover:bg-[#383d5e] text-white p-2 rounded-xl transition-colors cursor-pointer border border-[#3b3f63]"
@@ -433,54 +318,6 @@ export const GoldenArabicBookletModal: React.FC<GoldenArabicBookletModalProps> =
             </button>
           </div>
         </div>
-
-        {/* AI Generator Panel (Optional Accordion) */}
-        {showGeneratorPanel && (
-          <div className="p-3.5 bg-[#14172a] border-b border-[#2a2d45] text-xs space-y-2.5 animate-fadeIn">
-            <div className="flex items-center justify-between">
-              <span className="font-black text-[#fbbf24] flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4" />
-                المولد الذاتي بالذكاء الاصطناعي (Gemini 24 صفحة)
-              </span>
-              <button
-                onClick={handleResetDefault}
-                className="text-[10px] text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer underline"
-              >
-                <RefreshCw className="w-3 h-3" />
-                استعادة النسخة الوزارية المعتمدة
-              </button>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="حط مفتاح Gemini API هنا (أو اتركه فارغاً للاعتماد على السيرفر)"
-                className="flex-1 p-2.5 rounded-xl bg-[#1a1d2f] text-white border border-[#2a2d45] text-xs focus:outline-none focus:border-[#fbbf24]"
-              />
-              <button
-                onClick={generate24}
-                disabled={isGenerating}
-                className={`px-4 py-2.5 rounded-xl font-black text-xs cursor-pointer transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                  isGenerating
-                    ? 'bg-amber-600 text-white cursor-wait'
-                    : 'bg-[#fbbf24] hover:bg-yellow-400 text-slate-950 shadow-md'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{genBtnText}</span>
-              </button>
-            </div>
-
-            {loaderText && (
-              <div className="text-[11px] font-bold text-yellow-300 flex items-center gap-1.5 bg-[#1a1d2f] p-2 rounded-lg border border-[#2a2d45]">
-                <span className="animate-spin text-xs">⏳</span>
-                <span>{loaderText}</span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Main Content Viewer (Lines displayed inside card rounded-2xl p-4) */}
         <div

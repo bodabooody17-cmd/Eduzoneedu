@@ -32,40 +32,12 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [showEarnedToast, setShowEarnedToast] = useState(false);
-
-  // AI 24-page Generator states
-  const [apiKey, setApiKey] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [loaderText, setLoaderText] = useState('');
-  const [genBtnText, setGenBtnText] = useState('🚀 ولد المذكرة 24 صفحة كاملة (8 دفعات)');
-  const [showGeneratorPanel, setShowGeneratorPanel] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // Custom generated 24 pages for this specific summary
-  const [generatedPages, setGeneratedPages] = useState<string[] | null>(null);
 
   useEffect(() => {
     setCurrentPageIndex(0);
     setHasCompleted(false);
     setShowEarnedToast(false);
-    setIsGenerating(false);
-    setLoaderText('');
-
-    if (item) {
-      try {
-        const saved = localStorage.getItem(`eduzone_summary_24_${item.id}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setGeneratedPages(parsed);
-            return;
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-      setGeneratedPages(null);
-    }
   }, [item]);
 
   if (!item) return null;
@@ -94,12 +66,10 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
     );
   }
 
-  // Active pages list
-  const totalPages = generatedPages ? generatedPages.length : (item.pages?.length || 1);
-  const isUsingGeneratedPages = Boolean(generatedPages && generatedPages.length > 0);
+  // Active pages list (authentic 24 pages from curriculum)
+  const totalPages = item.pages?.length || 1;
 
-  const currentGeneratedContent = isUsingGeneratedPages && generatedPages ? generatedPages[currentPageIndex] : null;
-  const currentStructuredPage: SummaryPage = (!isUsingGeneratedPages && item.pages && item.pages[currentPageIndex])
+  const currentStructuredPage: SummaryPage = (item.pages && item.pages[currentPageIndex])
     ? item.pages[currentPageIndex]
     : {
         pageNumber: currentPageIndex + 1,
@@ -135,131 +105,16 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
     }
   };
 
-  // 8-Batch 24-Page AI Generation
-  const generate24Pages = async () => {
-    setIsGenerating(true);
-    const newPages: string[] = [];
-    const targetSubject = item.subject || item.title;
-    const targetBranch = item.trackLabel || 'ثانوية عامة';
-
-    for (let batch = 1; batch <= 8; batch++) {
-      const startPage = (batch - 1) * 3 + 1;
-      const endPage = batch * 3;
-
-      setLoaderText(
-        `⏳ بولد صفحات ${startPage}-${endPage} من 24 لمادة ${targetSubject} شعبة ${targetBranch}...`
-      );
-      setGenBtnText(`جاري ${endPage} / 24`);
-
-      const prompt = `اكتب صفحات ${startPage} الى ${endPage} فقط من مذكرة ${targetSubject} للثانوية العامة شعبة ${targetBranch} منهج 2026/2027 كل صفحة 500 كلمة كاملة بالتفصيل.
-التزم بهذا الشكل بالحرف:
-[بداية صفحة ${startPage}] محتوى صفحة ${startPage} 500 كلمة [نهاية صفحة ${startPage}]
-[بداية صفحة ${startPage + 1}] محتوى صفحة ${startPage + 1} 500 كلمة [نهاية صفحة ${startPage + 1}]
-[بداية صفحة ${endPage}] محتوى صفحة ${endPage} 500 كلمة [نهاية صفحة ${endPage}]
-الموضوع: مراجعة شاملة للوحدات والدروس ونواتج التعلم الوزارية في ${targetSubject}`;
-
-      try {
-        let extracted: string[] = [];
-
-        if (apiKey.trim()) {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { maxOutputTokens: 8000, temperature: 0.5 },
-              }),
-            }
-          );
-          const data = await res.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          const regex = /\[بداية صفحة \d+\]([\s\S]*?)\[نهاية صفحة \d+\]/g;
-          let m;
-          while ((m = regex.exec(text)) !== null) {
-            extracted.push(m[1].trim());
-          }
-          if (extracted.length === 0 && text.trim()) {
-            extracted.push(text.trim());
-          }
-        } else {
-          const res = await fetch('/api/ai/generate-batch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              batch,
-              subject: targetSubject,
-              subjectTitle: item.title,
-              customPrompt: prompt,
-            }),
-          });
-          const data = await res.json();
-          if (data.success && Array.isArray(data.pages)) {
-            extracted = data.pages.map((p: any) => p.content || p);
-          }
-        }
-
-        if (extracted.length > 0) {
-          newPages.push(...extracted);
-          setGeneratedPages([...newPages]);
-        }
-      } catch (err) {
-        console.error('Error generating batch in summary viewer:', err);
-      }
-
-      await new Promise((r) => setTimeout(r, 800));
-    }
-
-    setLoaderText('✅ خلصت 24 صفحة كاملة للمادة!');
-    setGenBtnText('✅ تم - 24 صفحة جاهزة');
-    setIsGenerating(false);
-    setCurrentPageIndex(0);
-
-    if (newPages.length > 0) {
-      setGeneratedPages(newPages);
-      try {
-        localStorage.setItem(`eduzone_summary_24_${item.id}`, JSON.stringify(newPages));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  };
-
-  const handleResetToDefault = () => {
-    try {
-      localStorage.removeItem(`eduzone_summary_24_${item.id}`);
-    } catch {}
-    setGeneratedPages(null);
-    setCurrentPageIndex(0);
-    setLoaderText('تمت استعادة النسخة المعتمدة مسبقاً للمادة');
-  };
-
   const handleDownloadPdfDocument = () => {
-    if (isUsingGeneratedPages && generatedPages) {
-      // Build temporary SummaryItem with all 24 generated pages
-      const tempItem: SummaryItem = {
-        ...item,
-        pagesCount: generatedPages.length,
-        pages: generatedPages.map((pText, idx) => ({
-          pageNumber: idx + 1,
-          title: `صفحة ${idx + 1} - ${item.subject}`,
-          content: pText.split('\n').filter((l) => l.trim().length > 0),
-        })),
-      };
-      downloadSummaryAsDocument(tempItem);
-    } else {
-      downloadSummaryAsDocument(item);
-    }
+    downloadSummaryAsDocument(item);
   };
 
   const handleCopyCurrentPage = () => {
-    let textToCopy = '';
-    if (isUsingGeneratedPages && currentGeneratedContent) {
-      textToCopy = currentGeneratedContent;
-    } else {
-      textToCopy = `${currentStructuredPage.title}\n\n${currentStructuredPage.content.join('\n\n')}`;
-    }
+    const textToCopy = `${currentStructuredPage.title}\n\n${currentStructuredPage.content.join('\n\n')}${
+      currentStructuredPage.keyFormulas?.length
+        ? `\n\nالقوانين:\n${currentStructuredPage.keyFormulas.join('\n')}`
+        : ''
+    }${currentStructuredPage.examTip ? `\n\nنصيحة الامتحان: ${currentStructuredPage.examTip}` : ''}`;
 
     navigator.clipboard.writeText(textToCopy).then(() => {
       setCopied(true);
@@ -285,11 +140,9 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
                   <Sparkles className="w-3 h-3" />
                   +50 XP
                 </span>
-                {isUsingGeneratedPages && (
-                  <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full">
-                    مذكرة 24 صفحة (AI)
-                  </span>
-                )}
+                <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full">
+                  24 صفحة معتمدة
+                </span>
               </div>
               <h2 className="text-sm sm:text-base font-black text-white leading-tight mt-0.5">
                 {item.title}
@@ -299,22 +152,9 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowGeneratorPanel(!showGeneratorPanel)}
-              title="توليد المذكرة 24 صفحة كاملة بالذكاء الاصطناعي"
-              className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition cursor-pointer border ${
-                showGeneratorPanel
-                  ? 'bg-yellow-400 text-slate-950 border-yellow-400 shadow-md'
-                  : 'bg-[#1a1d2f] text-yellow-300 border-yellow-400/30 hover:bg-[#252840]'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">مولد 24 صفحة</span>
-            </button>
-
-            <button
               onClick={handleDownloadPdfDocument}
               title="تحميل المذكرة كاملة PDF"
-              className="px-3 py-1.5 bg-[#2a2d45] hover:bg-[#383d5e] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-[#3b3f63]"
+              className="px-3.5 py-1.5 bg-[#2a2d45] hover:bg-[#383d5e] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-[#3b3f63]"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">تحميل PDF</span>
@@ -329,60 +169,6 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
             </button>
           </div>
         </div>
-
-        {/* AI Generator Panel */}
-        {showGeneratorPanel && (
-          <div className="p-4 bg-[#14172a] border-b border-[#2a2d45] space-y-3 animate-fadeIn text-xs shrink-0">
-            <div className="flex items-center justify-between">
-              <span className="font-black text-yellow-300 flex items-center gap-1.5 text-xs sm:text-sm">
-                <Sparkles className="w-4 h-4 text-yellow-400" />
-                توليد مذكرة 24 صفحة كاملة على 8 دفعات لمادة ({item.subject})
-              </span>
-              {isUsingGeneratedPages && (
-                <button
-                  onClick={handleResetToDefault}
-                  className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 cursor-pointer underline"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  استعادة المذكرة الأصلية
-                </button>
-              )}
-            </div>
-
-            <p className="text-[11px] text-gray-300">
-              يتم توليد 8 دفعات متتالية (كل دفعة 3 صفحات = 24 صفحة كاملة بمعدل 500 كلمة لكل صفحة) مخصصة لمسارك الدراسي ومنهج 2026/2027.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="مفتاح Gemini API (اختياري - اتركه فارغاً للاعتماد على السيرفر المدمج)"
-                className="flex-1 p-2.5 rounded-xl bg-[#1a1d2f] text-white border border-[#2a2d45] text-xs focus:outline-none focus:border-yellow-400"
-              />
-              <button
-                onClick={generate24Pages}
-                disabled={isGenerating}
-                className={`px-4 py-2.5 rounded-xl font-black text-xs cursor-pointer transition-all flex items-center justify-center gap-1.5 shrink-0 ${
-                  isGenerating
-                    ? 'bg-amber-600 text-white cursor-wait'
-                    : 'bg-yellow-400 hover:bg-yellow-300 text-slate-950 shadow-md'
-                }`}
-              >
-                <Sparkles className="w-4 h-4 fill-slate-950" />
-                <span>{genBtnText}</span>
-              </button>
-            </div>
-
-            {loaderText && (
-              <div className="text-[11px] font-bold text-yellow-300 bg-[#1a1d2f] p-2.5 rounded-xl border border-[#2a2d45] flex items-center gap-2">
-                <span className="animate-spin text-sm">⏳</span>
-                <span>{loaderText}</span>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Progress Bar & Page Indicator */}
         <div className="bg-[#14172a] border-b border-[#2a2d45] px-4 py-2.5 flex items-center justify-between text-xs text-gray-300 shrink-0">
@@ -437,34 +223,7 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
 
         {/* Content Viewer */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0f1220] space-y-4">
-          {isUsingGeneratedPages && currentGeneratedContent ? (
-            /* Render AI 24-page format with line cards */
-            <div className="space-y-3.5">
-              <div className="bg-[#1a1d2f] border border-yellow-400/30 rounded-2xl p-4 flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-black text-yellow-300">
-                  صفحة {currentPageIndex + 1} - مذكرة {item.subject} الشاملة
-                </h3>
-                <span className="text-xs text-gray-400 font-bold">
-                  منهج الثانوية العامة 2026/2027
-                </span>
-              </div>
-
-              {currentGeneratedContent
-                .split('\n')
-                .map((l) => l.trim())
-                .filter((l) => l.length > 0)
-                .map((line, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[#1a1d2f] border border-[#2a2d45] rounded-2xl p-4 text-xs sm:text-sm leading-7 text-gray-200 shadow-sm"
-                  >
-                    {line}
-                  </div>
-                ))}
-            </div>
-          ) : (
-            /* Render standard curated structured page */
-            <div className="space-y-4">
+          <div className="space-y-4">
               <div className="bg-[#1a1d2f] border border-[#2a2d45] rounded-2xl p-4 sm:p-5 flex items-center justify-between">
                 <h3 className="text-base sm:text-lg font-black text-yellow-300">
                   {currentStructuredPage.title}
@@ -519,7 +278,6 @@ export const SummaryViewerModal: React.FC<SummaryViewerModalProps> = ({
                 </div>
               )}
             </div>
-          )}
         </div>
 
         {/* Quick Page Jump Selector */}

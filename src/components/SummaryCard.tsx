@@ -42,14 +42,14 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenBooklet(item)}
-                title="فتح مولد وقارئ الـ 24 صفحة الذهبية"
+                title="فتح مذكرة الـ 24 صفحة كاملة"
                 className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 hover:bg-yellow-400/30 border border-yellow-400/40 flex items-center gap-1 transition cursor-pointer"
               >
-                ✨ 24 صفحة (AI)
+                📖 24 صفحة كاملة
               </button>
             ) : (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 flex items-center gap-1">
-                ✨ 24 صفحة (AI)
+                📖 24 صفحة كاملة
               </span>
             )}
             <span className="text-xs font-semibold text-slate-400">

@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Calculator,
   Trophy,
+  Globe,
 } from 'lucide-react';
 
 interface TrackTabsProps {
@@ -41,8 +42,11 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
   myTrackName,
   myTrackCount,
 }) => {
+  const isStudentLanguages = Boolean(
+    myTrackName && (myTrackName.includes('لغات') || myTrackName.toLowerCase().includes('lang'))
+  );
   const isStudentThanawya = Boolean(
-    myTrackName && (myTrackName.includes('علمي') || myTrackName.includes('أدبي'))
+    myTrackName && !isStudentLanguages && (myTrackName.includes('علمي') || myTrackName.includes('أدبي'))
   );
   const isStudentTechnical = Boolean(
     myTrackName && (myTrackName.includes('تجارة') || myTrackName.includes('صنايع'))
@@ -67,6 +71,13 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       label: 'ثانوية عامة',
       count: 12,
       icon: <BookOpen className="w-3.5 h-3.5" />,
+      hidden: isStudentTechnical || isStudentIcdl || isStudentLanguages,
+    },
+    {
+      id: 'languages',
+      label: 'قسم اللغات (Languages)',
+      count: 5,
+      icon: <Globe className="w-3.5 h-3.5" />,
       hidden: isStudentTechnical || isStudentIcdl,
     },
     {
@@ -74,7 +85,7 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       label: 'دبلومات فنية وتجارية',
       count: 5,
       icon: <Wrench className="w-3.5 h-3.5" />,
-      hidden: isStudentThanawya || isStudentIcdl,
+      hidden: isStudentThanawya || isStudentIcdl || isStudentLanguages,
     },
     {
       id: 'university_courses',
@@ -117,8 +128,7 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
         {tabs.map((tab) => {
           const isActive =
             activeTrack === tab.id ||
-            (tab.id === 'thanawya_science' &&
-              (activeTrack === 'thanawya_arts' || activeTrack === 'languages')) ||
+            (tab.id === 'thanawya_science' && activeTrack === 'thanawya_arts') ||
             (tab.id === 'technical_industrial' && activeTrack === 'commerce_diploma');
 
           return (

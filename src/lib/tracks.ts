@@ -26,8 +26,8 @@ export const TRACKS_CONFIG: any = {
   },
   "ثانوية عامة لغات (Languages)": {
     keywords: ["لغات", "Languages"],
-    subjects: ["Physics", "Chemistry", "Biology", "Math", "English", "French", "Geology"],
-    sections: ["الثانوية العامة", "لغات"]
+    subjects: ["Physics", "Chemistry", "Biology", "Math", "Statics", "English", "French", "Geology"],
+    sections: ["الثانوية العامة", "لغات", "قسم اللغات"]
   },
   "دورات جامعية و ICDL": {
     keywords: ["ICDL", "جامعية", "دورات"],

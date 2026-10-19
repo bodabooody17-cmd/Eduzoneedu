@@ -16,6 +16,7 @@ import {
   Unlock,
   Check,
   Zap,
+  Filter,
 } from 'lucide-react';
 
 interface InteractiveQuizModalProps {
@@ -77,9 +78,17 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     subject: string;
   } | null>(null);
 
-  // Check for saved question progress on opening
+  // Check for saved question progress and sync track on opening
   useEffect(() => {
     if (isOpen) {
+      const active =
+        (currentUser?.stage && currentUser.role === 'student' ? currentUser.stage : '') ||
+        localStorage.getItem('EduZone_Track') ||
+        localStorage.getItem('userBranch') ||
+        '';
+      if (active) {
+        setStudentTrack(active);
+      }
       try {
         const savedIdxStr = localStorage.getItem('eduzone_quiz_last_index');
         const savedSub = localStorage.getItem('eduzone_quiz_last_subject') || 'all';
@@ -93,7 +102,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
         console.error(e);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, currentUser]);
 
   // Persist current question position whenever it changes
   useEffect(() => {
@@ -234,6 +243,20 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     }
   };
 
+  const handleTrackChange = (newTrack: string) => {
+    setStudentTrack(newTrack);
+    setSelectedSubject('all');
+    setSearchQuery('');
+    setCurrentIndex(0);
+    try {
+      localStorage.setItem('EduZone_Track', newTrack);
+      localStorage.setItem('userBranch', newTrack);
+      window.dispatchEvent(new Event('eduzone_track_changed'));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleSelectSubject = (newSubject: string) => {
     setSelectedSubject(newSubject);
     setSearchQuery('');
@@ -315,11 +338,46 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
           </div>
         </div>
 
-        {/* Track Banner */}
-        {studentTrack && (
-          <div className="bg-yellow-400 text-slate-950 px-3.5 py-1.5 text-xs font-black flex items-center justify-between shrink-0 border-b border-yellow-500/30">
-            <span>📚 مسارك المعتمد: {studentTrack}</span>
-            <div className="flex items-center gap-2 text-[11px]">
+        {/* Track Filter Switcher */}
+        <div className="bg-slate-950 px-3 py-2 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+          <div className="flex items-center gap-1 text-[11px] font-bold text-yellow-400 whitespace-nowrap ml-1 shrink-0">
+            <Filter className="w-3.5 h-3.5" />
+            <span>فلتر الشعبة:</span>
+          </div>
+          {[
+            { id: 'all', label: 'الكل' },
+            { id: 'أدبي', label: 'أدبي' },
+            { id: 'علمي علوم', label: 'علمي علوم' },
+            { id: 'علمي رياضة', label: 'علمي رياضة' },
+            { id: 'لغات', label: 'لغات' },
+            { id: 'تجارة', label: 'دبلوم تجارة' },
+            { id: 'صنايع', label: 'دبلوم صنايع' },
+          ].map((trk) => {
+            const isSelected =
+              trk.id === 'all'
+                ? !studentTrack || studentTrack === 'all' || studentTrack === 'الكل'
+                : studentTrack.includes(trk.id);
+            return (
+              <button
+                key={trk.id}
+                onClick={() => handleTrackChange(trk.id === 'all' ? '' : trk.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                  isSelected
+                    ? 'bg-yellow-400 text-slate-950 shadow-sm font-black'
+                    : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700'
+                }`}
+              >
+                {trk.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Track Stats Banner */}
+        {studentTrack && studentTrack !== 'all' && studentTrack !== 'الكل' && (
+          <div className="bg-yellow-400/10 text-yellow-300 px-3.5 py-1 text-xs font-bold flex items-center justify-between shrink-0 border-b border-yellow-500/20">
+            <span>📚 الشعبة المحددة: {studentTrack}</span>
+            <div className="flex items-center gap-2 text-[11px] text-yellow-400">
               <span>المحلول: {solvedCount}</span>
               <span>•</span>
               <span>الصحيح: {correctCount}</span>

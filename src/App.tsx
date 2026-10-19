@@ -285,7 +285,16 @@ export default function App() {
 
   const handleAuthSuccess = (user: StudentUser) => {
     setCurrentUser(user);
+    if (user.stage && user.role === 'student') {
+      try {
+        localStorage.setItem('EduZone_Track', user.stage);
+        localStorage.setItem('userBranch', user.stage);
+      } catch (e) {
+        console.error(e);
+      }
+    }
     setMyTrack(getMyTrackData());
+    window.dispatchEvent(new Event('eduzone_track_changed'));
     setIsAuthModalOpen(false);
     if (pendingAction) {
       pendingAction();
@@ -437,7 +446,9 @@ export default function App() {
       // 2. Tab Track match
       if (activeTrack !== 'all' && activeTrack !== 'free_courses') {
         if (activeTrack === 'thanawya_science') {
-          if (item.track !== 'thanawya_science' && item.track !== 'thanawya_arts' && item.track !== 'languages') return false;
+          if (item.track !== 'thanawya_science' && item.track !== 'thanawya_arts') return false;
+        } else if (activeTrack === 'languages') {
+          if (item.track !== 'languages') return false;
         } else if (activeTrack === 'technical_industrial') {
           if (item.track !== 'technical_industrial' && item.track !== 'commerce_diploma') return false;
         } else if (item.track !== activeTrack) {
@@ -556,13 +567,29 @@ export default function App() {
       footerColorClass: 'text-amber-300',
       iconType: 'grad' as const,
     },
+    {
+      id: 4,
+      title: 'قسم مدارس اللغات (Languages)',
+      count: 5,
+      type: 'لغات',
+      description: 'Physics, Pure Math, Statics, Chemistry & Biology (مذكرات اللغات 24 صفحة باللغة الإنجليزية كاملة).',
+      targetTrack: 'languages' as EducationalTrack,
+      actionText: 'تصفح مذكرات اللغات',
+      colorClass: 'bg-cyan-600',
+      badgeColorClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30',
+      hoverColorClass: 'group-hover:text-cyan-300',
+      footerColorClass: 'text-cyan-300',
+      iconType: 'book' as const,
+    },
   ];
 
   const filteredSections = useMemo(() => {
     return sections.filter((sec) => {
       if (!trackStorageName) return true;
+      if (trackStorageName.includes('لغات') || trackStorageName.toLowerCase().includes('lang')) {
+        return sec.type.includes('لغات');
+      }
       if (trackStorageName.includes('علمي') || trackStorageName.includes('أدبي')) {
-        // طالب ثانوية عامة، اخفي الدبلومات
         return sec.type.includes('ثانوية عامة');
       }
       if (trackStorageName.includes('تجارة') || trackStorageName.includes('صنايع')) {
@@ -585,8 +612,15 @@ export default function App() {
       filteredSummaries.filter(
         (s) =>
           s.track === 'thanawya_science' ||
-          s.track === 'thanawya_arts' ||
-          s.track === 'languages'
+          s.track === 'thanawya_arts'
+      ),
+    [filteredSummaries]
+  );
+
+  const languagesSummaries = useMemo(
+    () =>
+      filteredSummaries.filter(
+        (s) => s.track === 'languages'
       ),
     [filteredSummaries]
   );
@@ -919,6 +953,53 @@ export default function App() {
                 {/* Summaries List - 1 Column */}
                 <div className="flex flex-col gap-3 w-full">
                   {thanawyaSummaries.map((item) => (
+                    <SummaryCard
+                      key={item.id}
+                      item={item}
+                      onReadOnline={handleReadOnline}
+                      onDownloadPdf={handleDownloadPdf}
+                      isSaved={savedIds.includes(item.id)}
+                      onToggleSave={handleToggleSave}
+                      isCommerce={false}
+                      onOpenVipPayment={() => setIsPricingModalOpen(true)}
+                      onOpenBooklet={handleOpenBooklet}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ========================================================= */}
+            {/* 1.5. قسم مدارس اللغات (Languages School)                  */}
+            {/* ========================================================= */}
+            {activeTrack === 'languages' && (
+              <section className="space-y-3 pt-1 animate-fadeIn">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col gap-2.5 text-white shadow-md shadow-black/25">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold bg-cyan-600 text-white px-2 py-0.5 rounded-md">
+                        Languages Division
+                      </span>
+                      <h2 className="text-base sm:text-lg font-black text-white">
+                        مذكرات ثانوية عامة لغات (24 صفحة باللغة الإنجليزية)
+                      </h2>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Physics • Pure Mathematics • Statics • Chemistry • Biology (مناهج الثانوية العامة لغات 2026 كاملة بدون اختصار وبدون أي كورسات جانبية).
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTrack('all')}
+                    className="self-start px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-bold hover:bg-slate-750 transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>العودة للرئيسية</span>
+                  </button>
+                </div>
+
+                {/* Languages Summaries List ONLY - No video courses */}
+                <div className="flex flex-col gap-3 w-full">
+                  {languagesSummaries.map((item) => (
                     <SummaryCard
                       key={item.id}
                       item={item}

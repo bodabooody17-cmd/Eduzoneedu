@@ -408,6 +408,93 @@ const GEOGRAPHY_BASE = [
   }
 ];
 
+const ENGLISH_BASE = [
+  {
+    q: 'While I _______ my homework yesterday evening, the electricity suddenly went off.',
+    opts: ['was doing', 'did', 'had done', 'have done'],
+    corr: 0,
+    exp: 'Use the Past Continuous (was/were + v-ing) for an action that was in progress when another shorter action interrupted it in the past.'
+  },
+  {
+    q: 'She has been living in Cairo _______ 2018.',
+    opts: ['since', 'for', 'ago', 'in'],
+    corr: 0,
+    exp: '"Since" is used with a specific starting point in time (like a year 2018, morning, Monday) with the Present Perfect tense.'
+  },
+  {
+    q: 'If he _______ harder for the final exam, he would have achieved full marks.',
+    opts: ['had studied', 'studied', 'studies', 'would study'],
+    corr: 0,
+    exp: 'Third Conditional (unreal past): If + Past Perfect (had + p.p.), would have + p.p.'
+  },
+  {
+    q: 'The government has _______ severe measures to prevent environmental pollution.',
+    opts: ['taken', 'made', 'done', 'given'],
+    corr: 0,
+    exp: 'Collocation: "take measures" or "take steps" means to implement actions to deal with a problem.'
+  },
+  {
+    q: 'I had my car _______ by a professional mechanic yesterday afternoon.',
+    opts: ['repaired', 'repair', 'repairing', 'to repair'],
+    corr: 0,
+    exp: 'Causative structure: have + object (thing) + past participle (repaired).'
+  },
+  {
+    q: 'The teacher praised the student _______ project won first place nationwide.',
+    opts: ['whose', 'who', 'whom', 'which'],
+    corr: 0,
+    exp: '"Whose" is the relative pronoun used to indicate possession (the student\'s project).'
+  }
+];
+
+const STATICS_BASE = [
+  {
+    q: 'وضع جسم وزنه 30 نيوتن على مستوى أفقي خشن، فإذا كان معامل الاحتكاك السكوني 1/جذر3، فإن مقدار أقل قوة أفقية تجعل الجسم على وشك الحركة يساوي:',
+    opts: ['10 جذر3 نيوتن', '30 نيوتن', '15 نيوتن', '20 جذر3 نيوتن'],
+    corr: 0,
+    exp: 'ق = م_س × ر = (1 / جذر3) × 30 = 30 / جذر3 = 10 جذر3 نيوتن.'
+  },
+  {
+    q: 'مقدار أقل قوة تميل على الأفقي تلزم لتحريك جسم وزنه (و) على مستوى أفقي خشن زاوية احتكاكه (ل) يساوي:',
+    opts: ['و جا(ل)', 'و جتا(ل)', 'و ظا(ل)', 'و قا(ل)'],
+    corr: 0,
+    exp: 'أقل قوة لحفظ أو بدء حركة جسم على مستوى أفقي خشن تميل بزاوية هـ = ل ومقدارها ق_min = و جا(ل).'
+  },
+  {
+    q: 'إذا كانت النقطتان أ و ب في مستوى قوى محصلتها ح، وكان عزم القوى حول أ يساوي عزمها حول ب (جـ_أ = جـ_ب != 0)، فإن:',
+    opts: ['خط عمل المحصلة يوازي المستقيم أ ب', 'خط عمل المحصلة يمر بمنتصف أ ب', 'المحصلة عمودية على أ ب', 'خط عمل المحصلة ينطبق على أ ب'],
+    corr: 0,
+    exp: 'إذا تساوى القياس الجبري للعزم حول نقطتين فإن خط عمل المحصلة يوازي الخط المستقيم المار بهما.'
+  },
+  {
+    q: 'يتزن الازدواج الميكانيكي مع:',
+    opts: ['ازدواج آخر مساوٍ له في المقدار ومضاد له في الاتجاه', 'قوة مفردة مساوية له في العزم', 'مجموعة قوى متلاقية محصلتها لا تساوي صفراً', 'أي قوة تمر بمركز الثقل'],
+    corr: 0,
+    exp: 'قاعدة استاتيكية أساسية: لا يتزن الازدواج إلا مع ازدواج آخر مثله، مساوٍ له في المقدار ومضاد له في الاتجاه.'
+  }
+];
+
+const BUSINESS_BASE = [
+  {
+    q: 'الوظيفة الإدارية الأولى التي تسبق جميع الوظائف الأخرى وتتضمن تحديد الأهداف ورسم السياسات المستقبلية هي:',
+    opts: ['التخطيط', 'التنظيم', 'التوجيه', 'الرقابة'],
+    corr: 0,
+    exp: 'التخطيط هو نقطة البداية والقاعدة الأساسية لجميع الوظائف الإدارية في أي منشأة.'
+  },
+  {
+    q: 'يتكون المزيج التسويقي التقليدي (4Ps) من العناصر الآتية:',
+    opts: ['المنتج، السعر، التوزيع (المكان)، والترويج', 'الإنتاج، التخزين، النقل، والبيع', 'التخطيط، التنظيم، القيادة، والمتابعة', 'الجودة، التكلفة، الوقت، والمرونة'],
+    corr: 0,
+    exp: 'المزيج التسويقي يشمل Product, Price, Place, Promotion.'
+  },
+  {
+    q: 'طبقاً لقانون العمل المصري رقم 12 لسنة 2003، الحد الأقصى لفترة اختبار العامل هو:',
+    opts: ['ثلاثة أشهر', 'ستة أشهر', 'شهر واحد', 'سنة كاملة'],
+    corr: 0,
+    exp: 'نص قانون العمل على ألا تزيد فترة الاختبار على 3 أشهر ولا يجوز تعيين العامل تحت الاختبار أكثر من مرة لدى صاحب عمل واحد.'
+  }
+];
+
 export const QUESTION_BANK: BankQuestion[] = [
   ...generateSubjectQuestions('التاريخ', 'hist', HISTORY_BASE, 'أدبي', 'الحملة الفرنسية ومحمد علي'),
   ...generateSubjectQuestions('الجغرافيا', 'geo', GEOGRAPHY_BASE, 'أدبي', 'الجغرافيا السياسية والدولة والتنظيم المكاني'),
@@ -418,8 +505,11 @@ export const QUESTION_BANK: BankQuestion[] = [
   ...generateSubjectQuestions('الأحياء', 'bio', BIOLOGY_BASE, 'علمي علوم', 'المناعة والوراثة الجزيئية DNA'),
   ...generateSubjectQuestions('الجيولوجيا', 'geol', GEOLOGY_BASE, 'علمي علوم', 'التراكيب الجيولوجية وبنك الصخور'),
   ...generateSubjectQuestions('الرياضيات', 'math', MATH_BASE, 'علمي رياضة', 'التفاضل والتكامل والمعدلات'),
+  ...generateSubjectQuestions('الاستاتيكا', 'stat', STATICS_BASE, 'علمي رياضة', 'الاحتكاك والعزوم والاتزان العام'),
   ...generateSubjectQuestions('المحاسبة المالية', 'acc', ACCOUNTING_BASE, 'تجارة', 'قيود اليومية والقوائم المالية'),
+  ...generateSubjectQuestions('إدارة الأعمال', 'biz', BUSINESS_BASE, 'تجارة', 'التخطيط والتسويق وقانون العمل'),
   ...generateSubjectQuestions('الرسم الفني والصناعي', 'draw', DRAWING_BASE, 'صنايع', 'المساقط والدوائر الصناعية'),
   ...generateSubjectQuestions('مهارات الحاسب و ICDL', 'icdl', ICDL_BASE, 'ICDL', 'دوال الإكسيل وتنسيق الأبحاث'),
   ...generateSubjectQuestions('اللغة العربية', 'arabic', ARABIC_BASE, 'عام', 'النحو والبلاغة والمشتقات'),
+  ...generateSubjectQuestions('اللغة الإنجليزية', 'eng', ENGLISH_BASE, 'عام', 'Grammar, Vocab & Structure'),
 ];
