@@ -16,6 +16,8 @@ import {
   Unlock,
   Zap,
   GraduationCap,
+  Crown,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface InteractiveQuizModalProps {
@@ -34,7 +36,14 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
   onOpenPricingModal,
   currentUser,
   currentTrack,
+  userRole,
 }) => {
+  const isSupervisor = Boolean(
+    currentUser?.role === 'supervisor' ||
+    userRole === 'supervisor' ||
+    (typeof window !== 'undefined' && localStorage.getItem('userRole') === 'supervisor')
+  );
+
   const [studentTrack, setStudentTrack] = useState<string>(() => {
     try {
       return (
@@ -143,12 +152,17 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
     };
   }, [currentUser, currentTrack]);
 
-  // Filter entire bank strictly by student track automatically
+  // Filter entire bank:
+  // - Supervisor ONLY (logged in with supervisor code): sees ALL questions across ALL subjects & tracks (1600+ questions without any filtering)!
+  // - Students: strictly filtered by their registered branch
   const trackQuestions: BankQuestion[] = useMemo(() => {
+    if (isSupervisor) {
+      return QUESTION_BANK;
+    }
     return filterQuestions(QUESTION_BANK, studentTrack);
-  }, [studentTrack]);
+  }, [studentTrack, isSupervisor]);
 
-  // Distinct subjects available in the student track
+  // Distinct subjects available in the track
   const availableSubjects = useMemo(() => {
     const set = new Set<string>();
     trackQuestions.forEach((q) => {
@@ -171,7 +185,7 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
       if (selectedSubject !== 'all' && q.subject !== selectedSubject) {
         return false;
       }
-      if (showOnlyFree && !q.isFree) {
+      if (showOnlyFree && !isSupervisor && !q.isFree) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -184,16 +198,19 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
       }
       return true;
     });
-  }, [trackQuestions, selectedSubject, showOnlyFree, searchQuery]);
+  }, [trackQuestions, selectedSubject, showOnlyFree, searchQuery, isSupervisor]);
 
   // Active question
   const currentQuestion: BankQuestion | undefined = filteredQuestions[currentIndex];
 
-  // Questions > 60 or !isFree are strictly locked/paid
+  // Questions > 60 or !isFree:
+  // - Supervisor ONLY: ALWAYS UNLOCKED (isQuestionLocked = false)! 100% free!
+  // - Students: questions > 60 are strictly locked
   const isQuestionLocked = useMemo(() => {
+    if (isSupervisor) return false;
     if (!currentQuestion) return false;
     return !currentQuestion.isFree || (typeof currentQuestion.num === 'number' && currentQuestion.num > 60);
-  }, [currentQuestion]);
+  }, [currentQuestion, isSupervisor]);
 
   // User state on current question
   const isAnswered = currentQuestion ? userAnswers[currentQuestion.id] !== undefined : false;
