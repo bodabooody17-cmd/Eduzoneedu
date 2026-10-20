@@ -61,9 +61,16 @@ export const Hero: React.FC<HeroProps> = ({
             type="button"
             onClick={onOpenCreatorProfile}
             title="الملف التعريفي لـ Eng.Abdullah"
-            className="text-amber-300 font-bold text-[11px] bg-slate-900 border border-amber-400/40 px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer"
+            className="text-amber-300 hover:text-white font-bold text-[11px] bg-slate-900 border border-amber-400/40 hover:border-amber-400 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 cursor-pointer transition shadow-xs"
           >
-            <Sparkles className="w-3 h-3 text-amber-400" />
+            <img
+              src="/images/eng_abdullah.jpg"
+              alt="Eng.Abdullah"
+              className="w-4 h-4 rounded-full object-cover object-[center_24%] border border-amber-400/80 shrink-0"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             <span>بإشراف Eng.Abdullah</span>
           </button>
         </div>

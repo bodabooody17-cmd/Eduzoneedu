@@ -16,6 +16,7 @@ import { CHEMISTRY_LANG_PAGES_24 } from './subjectPages/chemistryLangPages';
 import { BIOLOGY_LANG_PAGES_24 } from './subjectPages/biologyLangPages';
 import { COMMERCE_PAGES_24 } from './subjectPages/commercePages';
 import { INDUSTRIAL_PAGES_24 } from './subjectPages/industrialPages';
+import { GEOLOGY_PAGES_24 } from './subjectPages/geologyPages';
 
 export const SUMMARY_ITEMS: SummaryItem[] = [
   {
@@ -553,32 +554,22 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
   },
   {
     id: 'geol-01',
-    title: 'مفكرة الجيولوجيا وعلوم البيئة وبنك الصخور',
+    title: 'مذكرة الجيولوجيا وعلوم البيئة وبنك الصخور الذهبية (24 صفحة كاملة)',
     subject: 'جيولوجيا',
     track: 'thanawya_science',
     trackLabel: 'ثانوية عامة - علمي علوم',
-    description: 'دليل كامل لدورة الصخور، الفوالق والطيات، والحركات التكتونية للألواح والبيئة المتوازنة.',
+    description: 'دليل شامل 24 صفحة لدورة الصخور وبوين، الفوالق والطيات، الزلازل والانجراف القاري، وعلم البيئة واستنزاف الموارد 2026/2027.',
     author: 'جيولوجي/ ماجد إمام',
-    pagesCount: 16,
-    fileSize: '4.1 MB',
+    pagesCount: 24,
+    fileSize: '5.2 MB',
     term: 'الفصل الدراسي الثاني',
     year: '2026 / 2027',
-    featured: false,
+    featured: true,
     colorScheme: 'teal',
-    tags: ['جيولوجيا', 'علمي علوم', 'صخور', 'فوالق', 'بيئة'],
+    tags: ['جيولوجيا', 'علمي علوم', 'صخور', 'فوالق', 'بيئة', '24 صفحة'],
     planType: 'free',
     priceBadge: 'مجاني',
-    pages: [
-      {
-        pageNumber: 1,
-        title: 'التركيبات الجيولوجية الأولية والثانوية',
-        content: [
-          'الطيات: تنشأ نتيجة قوى الضغط، وتتكون من جناحين ومستوى محوري ومحور.',
-          'الفوالق: كسور يصاحبها إزاحة في صخور القشرة الأرضية (فالق عادي، معكوس، دسر، ذو حركة أفقية).'
-        ],
-        examTip: 'الفالق العادي ينتج من قوى شد وتتحرك صخور الحائط العلوي إلى أسفل بالنسبة للحائط السفلي.'
-      }
-    ]
+    pages: GEOLOGY_PAGES_24
   },
   {
     id: 'math-01',

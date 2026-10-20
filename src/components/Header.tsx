@@ -125,9 +125,17 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenCreatorProfile}
               title="الملف التعريفي للمؤسس م. عبد الله"
-              className="text-[9px] font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer block leading-tight mt-0.5"
+              className="text-[9px] font-bold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1 leading-tight mt-0.5"
             >
-              بإشراف Eng.Abdullah
+              <img
+                src="/images/eng_abdullah.jpg"
+                alt="Eng.Abdullah"
+                className="w-3.5 h-3.5 rounded-full object-cover object-[center_24%] border border-amber-400/80 shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <span>بإشراف Eng.Abdullah</span>
             </button>
           </div>
 

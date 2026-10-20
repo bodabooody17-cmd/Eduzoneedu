@@ -495,6 +495,135 @@ const BUSINESS_BASE = [
   }
 ];
 
+const PHYSICS_LANG_BASE = [
+  {
+    q: 'If the length of a uniform wire is doubled and its cross-sectional area is halved, its electric resistance becomes:',
+    opts: ['Four times its initial value', 'Twice its initial value', 'Remains unchanged', 'One fourth of its initial value'],
+    corr: 0,
+    exp: 'From R = ρ (L / A), doubling L and halving A yields R_new = (2 / 0.5) * R = 4R.'
+  },
+  {
+    q: 'The magnetic flux density at the center of a circular loop carrying an electric current is directly proportional to:',
+    opts: ['The current intensity and number of turns', 'The radius of the loop only', 'The square of current intensity', 'Inversely to the permeability of the medium'],
+    corr: 0,
+    exp: 'From B = (μ * N * I) / (2 * r), B is directly proportional to both N and I.'
+  },
+  {
+    q: 'Faraday’s law of electromagnetic induction states that the induced electromotive force (EMF) is proportional to:',
+    opts: ['The rate of change of magnetic flux', 'The magnetic flux only', 'The resistance of the coil', 'The current passing in the external circuit'],
+    corr: 0,
+    exp: 'EMF = -N (ΔΦ_m / Δt), directly proportional to the time rate of change of magnetic flux cutting the coil.'
+  },
+  {
+    q: 'In an AC circuit containing an inductor and a capacitor, the resonance frequency (f_0) is given by:',
+    opts: ['1 / (2 * π * √(L * C))', '2 * π * √(L * C)', '√(L / C)', '1 / (4 * π^2 * L * C)'],
+    corr: 0,
+    exp: 'At resonance X_L = X_C => 2πfL = 1/(2πfC) => f_0 = 1 / (2π√(LC)).'
+  }
+];
+
+const CHEMISTRY_LANG_BASE = [
+  {
+    q: 'Which of the following transition elements has the highest oxidation state in its compounds?',
+    opts: ['Manganese (+7)', 'Chromium (+6)', 'Titanium (+4)', 'Iron (+6)'],
+    corr: 0,
+    exp: 'Manganese ([Ar] 4s2 3d5) can lose all 4s and 3d electrons to reach the +7 oxidation state in KMnO4.'
+  },
+  {
+    q: 'When concentrated sulfuric acid is heated with iron, the produced gases and salts are:',
+    opts: ['Iron (II) sulfate, iron (III) sulfate, SO2 gas, and water', 'Iron (II) sulfate and hydrogen gas only', 'Iron (III) oxide and SO3 gas', 'Iron (II) oxide and water'],
+    corr: 0,
+    exp: '3Fe + 8H2SO4(conc) -> FeSO4 + Fe2(SO4)3 + 4SO2 + 8H2O.'
+  },
+  {
+    q: 'According to Le Chatelier’s principle, increasing the pressure on an equilibrium gaseous system shifts it towards:',
+    opts: ['The direction with fewer moles of gas', 'The direction with more moles of gas', 'Has no effect on equilibrium', 'Increases the equilibrium constant Kc'],
+    corr: 0,
+    exp: 'Increasing external pressure shifts the equilibrium towards the side with the smaller number of gaseous molecules.'
+  },
+  {
+    q: 'The general molecular formula of aliphatic alkenes is:',
+    opts: ['CnH2n', 'CnH2n+2', 'CnH2n-2', 'CnH2n+1OH'],
+    corr: 0,
+    exp: 'Alkenes are unsaturated aliphatic hydrocarbons containing one double bond with general formula CnH2n.'
+  }
+];
+
+const BIOLOGY_LANG_BASE = [
+  {
+    q: 'The fundamental structural and functional contractile unit of a skeletal muscle myofibril is called:',
+    opts: ['Sarcomere', 'Sarcolemma', 'Sarcoplasm', 'Myosin filament'],
+    corr: 0,
+    exp: 'The sarcomere is the distance between two successive Z-lines in a myofibril.'
+  },
+  {
+    q: 'The master endocrine gland that controls the secretion of other endocrine glands in the human body is:',
+    opts: ['Pituitary gland', 'Thyroid gland', 'Adrenal cortex', 'Pancreas'],
+    corr: 0,
+    exp: 'The pituitary gland (hypophysis) secretes tropic hormones (TSH, ACTH, FSH, LH) regulating other glands.'
+  },
+  {
+    q: 'In the DNA double helix, the complementary nitrogenous base paired with Adenine by two hydrogen bonds is:',
+    opts: ['Thymine', 'Guanine', 'Cytosine', 'Uracil'],
+    corr: 0,
+    exp: 'Adenine (A) always pairs with Thymine (T) via two hydrogen bonds (A = T), while Guanine pairs with Cytosine with three.'
+  },
+  {
+    q: 'The specialized B-lymphocyte cells responsible for producing circulating antibodies in humoral immunity are:',
+    opts: ['Plasma B cells', 'Memory T cells', 'Cytotoxic T cells (Tc)', 'Natural Killer cells (NK)'],
+    corr: 0,
+    exp: 'Activated B cells differentiate into Plasma B cells that synthesize and secrete specific antibodies into blood and lymph.'
+  }
+];
+
+const PURE_MATH_LANG_BASE = [
+  {
+    q: 'If y = sin(3x), then the first derivative dy/dx with respect to x equals:',
+    opts: ['3 cos(3x)', 'cos(3x)', '-3 cos(3x)', '3 sin(3x)'],
+    corr: 0,
+    exp: 'By the chain rule: d/dx[sin(u)] = cos(u) * du/dx => d/dx[sin(3x)] = 3 cos(3x).'
+  },
+  {
+    q: 'The value of the definite integral ∫ from 0 to 1 of (3x^2 + 2x) dx is equal to:',
+    opts: ['2', '1', '3', '5'],
+    corr: 0,
+    exp: '[x^3 + x^2] from 0 to 1 = (1 + 1) - (0) = 2.'
+  },
+  {
+    q: 'In the binomial expansion of (x + a)^n, the ratio of the (r+1)th term to the rth term equals:',
+    opts: ['((n - r + 1) / r) * (a / x)', '((n - r) / (r + 1)) * (x / a)', '(n / r) * (a / x)', '((n + 1) / r) * (a / x)'],
+    corr: 0,
+    exp: 'Standard binomial formula: T_(r+1) / T_r = ((n - r + 1) / r) * (second term / first term).'
+  },
+  {
+    q: 'The modulus |z| of the complex number z = 3 + 4i is equal to:',
+    opts: ['5', '7', '25', '1'],
+    corr: 0,
+    exp: '|z| = √(x^2 + y^2) = √(3^2 + 4^2) = √(9 + 16) = √25 = 5.'
+  }
+];
+
+const STATICS_LANG_BASE = [
+  {
+    q: 'A body of weight W rests on a rough horizontal plane with friction angle λ. The minimum force required to move the body is:',
+    opts: ['W sin(λ)', 'W cos(λ)', 'W tan(λ)', 'W sec(λ)'],
+    corr: 0,
+    exp: 'The minimum force required to pull the body on a rough horizontal plane is F_min = W sin(λ), inclined at angle λ to the horizontal.'
+  },
+  {
+    q: 'Two parallel forces of magnitudes 20 N and 30 N act in the same direction. The magnitude of their resultant is:',
+    opts: ['50 N acting in the same direction', '10 N acting in the opposite direction', '600 N', '25 N'],
+    corr: 0,
+    exp: 'For two parallel forces in the same direction, R = F1 + F2 = 20 + 30 = 50 N acting in the same direction.'
+  },
+  {
+    q: 'A couple consists of two forces of magnitude F each, separated by a perpendicular arm of length L. The moment of the couple is:',
+    opts: ['F * L', '2 * F * L', 'F / L', '0.5 * F * L'],
+    corr: 0,
+    exp: 'The magnitude of the moment of a couple is the product of the magnitude of one of the forces and the perpendicular distance (arm) between them.'
+  }
+];
+
 export const QUESTION_BANK: BankQuestion[] = [
   ...generateSubjectQuestions('التاريخ', 'hist', HISTORY_BASE, 'أدبي', 'الحملة الفرنسية ومحمد علي'),
   ...generateSubjectQuestions('الجغرافيا', 'geo', GEOGRAPHY_BASE, 'أدبي', 'الجغرافيا السياسية والدولة والتنظيم المكاني'),
@@ -512,4 +641,10 @@ export const QUESTION_BANK: BankQuestion[] = [
   ...generateSubjectQuestions('مهارات الحاسب و ICDL', 'icdl', ICDL_BASE, 'ICDL', 'دوال الإكسيل وتنسيق الأبحاث'),
   ...generateSubjectQuestions('اللغة العربية', 'arabic', ARABIC_BASE, 'عام', 'النحو والبلاغة والمشتقات'),
   ...generateSubjectQuestions('اللغة الإنجليزية', 'eng', ENGLISH_BASE, 'عام', 'Grammar, Vocab & Structure'),
+  // Dedicated Languages Curriculum Questions (Physics, Chemistry, Biology, Math, Statics)
+  ...generateSubjectQuestions('Physics (Languages)', 'lang-phys', PHYSICS_LANG_BASE, 'languages', 'Current Electricity & Modern Physics'),
+  ...generateSubjectQuestions('Chemistry (Languages)', 'lang-chem', CHEMISTRY_LANG_BASE, 'languages', 'Transition Elements & Organic Chemistry'),
+  ...generateSubjectQuestions('Biology (Languages)', 'lang-bio', BIOLOGY_LANG_BASE, 'languages', 'Molecular Genetics & Hormones'),
+  ...generateSubjectQuestions('Pure Mathematics (Languages)', 'lang-math', PURE_MATH_LANG_BASE, 'languages', 'Calculus, Algebra & Geometry'),
+  ...generateSubjectQuestions('Statics (Languages)', 'lang-stat', STATICS_LANG_BASE, 'languages', 'Friction, Couples & Equilibrium'),
 ];

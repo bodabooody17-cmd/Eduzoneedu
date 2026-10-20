@@ -74,12 +74,21 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       hidden: isStudentTechnical || isStudentIcdl || isStudentLanguages,
     },
     {
-      id: 'languages',
-      label: 'قسم اللغات (Languages)',
-      count: 5,
-      icon: <Globe className="w-3.5 h-3.5" />,
-      hidden: isStudentTechnical || isStudentIcdl,
+      id: 'free_courses',
+      label: 'قسم الكورسات',
+      count: counts.free_courses,
+      icon: <Video className="w-3.5 h-3.5" />,
     },
+    ...(isStudentLanguages
+      ? [
+          {
+            id: 'languages' as EducationalTrack,
+            label: 'قسم اللغات (Languages)',
+            count: 5,
+            icon: <Globe className="w-3.5 h-3.5" />,
+          },
+        ]
+      : []),
     {
       id: 'technical_industrial',
       label: 'دبلومات فنية وتجارية',
@@ -93,12 +102,6 @@ export const TrackTabs: React.FC<TrackTabsProps> = ({
       count: 3,
       icon: <GraduationCap className="w-3.5 h-3.5" />,
       hidden: isStudentThanawya || isStudentTechnical,
-    },
-    {
-      id: 'free_courses',
-      label: 'محاضرات فيديو HD',
-      count: counts.free_courses,
-      icon: <Video className="w-3.5 h-3.5" />,
     },
     {
       id: 'quiz_bank',

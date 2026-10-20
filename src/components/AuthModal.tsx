@@ -13,6 +13,8 @@ import {
   Trash2,
   KeyRound,
   Lock,
+  Check,
+  ChevronDown,
 } from 'lucide-react';
 import { awardPoints } from '../utils/gamification';
 import {
@@ -50,6 +52,69 @@ interface AuthModalProps {
 // Strictly Egyptian mobile numbers: 11 digits starting with 010, 011, 012, 015
 const EGYPT_PHONE_REGEX = /^01[0-2,5]{1}[0-9]{8}$/;
 
+export const STUDENT_TRACKS = [
+  {
+    id: 'ثانوية عامة (علمي علوم)',
+    title: '🔬 ثانوية عامة (علمي علوم)',
+    desc: 'فيزياء • كيمياء • أحياء • جيولوجيا • عربي • لغات',
+    badge: 'علمي علوم',
+    icon: '🔬',
+  },
+  {
+    id: 'ثانوية عامة (علمي رياضة)',
+    title: '📐 ثانوية عامة (علمي رياضة)',
+    desc: 'فيزياء • كيمياء • رياضة بحتة • استاتيكا وديناميكا • عربي',
+    badge: 'علمي رياضة',
+    icon: '📐',
+  },
+  {
+    id: 'ثانوية عامة (شعبة أدبي)',
+    title: '📚 ثانوية عامة (شعبة أدبي)',
+    desc: 'تاريخ • جغرافيا • فلسفة ومنطق • علم نفس • عربي • لغات',
+    badge: 'أدبي',
+    icon: '📚',
+  },
+  {
+    id: 'دبلوم تجارة (3 و 5 سنوات)',
+    title: '💼 دبلوم تجارة (3 و 5 سنوات)',
+    desc: 'محاسبة مالية • إدارة أعمال • اقتصاد • إحصاء • قانون تجاري',
+    badge: 'تجارة',
+    icon: '💼',
+  },
+  {
+    id: 'دبلوم صنايع وتكنولوجيا',
+    title: '⚙️ دبلوم صنايع وتكنولوجيا',
+    desc: 'رسم فني صناعي • ميكانيكا • كهرباء • تبريد وتكييف',
+    badge: 'صنايع',
+    icon: '⚙️',
+  },
+  {
+    id: 'ثانوية عامة لغات (Languages)',
+    title: '🌐 ثانوية عامة لغات (Languages)',
+    desc: 'Physics • Chemistry • Biology • Pure & Applied Math',
+    badge: 'Languages',
+    icon: '🌐',
+  },
+  {
+    id: 'دورات جامعية و ICDL',
+    title: '💻 دورات جامعية و ICDL',
+    desc: 'Microsoft Office • دوال إكسيل • إعداد أبحاث • برمجة',
+    badge: 'جامعية',
+    icon: '💻',
+  },
+];
+
+export const TEACHER_SPECIALTIES = [
+  { id: 'الفيزياء (علمي)', title: '⚡ الفيزياء (علمي)', desc: 'منهج الفيزياء الحديثة والكهرومغناطيسية', icon: '⚡' },
+  { id: 'الكيمياء (علمي)', title: '🧪 الكيمياء (علمي)', desc: 'الكيمياء الكهربية والعضوية والتحليلية', icon: '🧪' },
+  { id: 'الأحياء والجيولوجيا', title: '🧬 الأحياء والجيولوجيا', desc: 'المناعة والوراثة الجزيئية وعلوم الأرض', icon: '🧬' },
+  { id: 'اللغة الإنجليزية (General & Advanced English)', title: '🇬🇧 اللغة الإنجليزية', desc: 'General & Advanced Grammar, Vocab & Literature', icon: '🇬🇧' },
+  { id: 'اللغة العربية', title: '📖 اللغة العربية', desc: 'النحو والبلاغة والنصوص والأدب العربي', icon: '📖' },
+  { id: 'الرياضيات البحتة والتطبيقية', title: '📐 الرياضيات البحتة والتطبيقية', desc: 'تفاضل وتكامل واستاتيكا وديناميكا وجبر وهندسة', icon: '📐' },
+  { id: 'المحاسبة المالية للدبلومات', title: '💼 المحاسبة المالية للدبلومات', desc: 'المحاسبة المالية والضرائب وإدارة الأعمال', icon: '💼' },
+  { id: 'الرسم الفني الصناعي', title: '⚙️ الرسم الفني الصناعي', desc: 'الرسم الهندسي والعمليات التكنولوجية', icon: '⚙️' },
+];
+
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
@@ -62,13 +127,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [name, setName] = useState('');
   const [contact, setContact] = useState(''); // Phone number
   const [stage, setStage] = useState('ثانوية عامة (علمي علوم)');
-  const [subjectSpecialty, setSubjectSpecialty] = useState('الفيزياء');
+  const [subjectSpecialty, setSubjectSpecialty] = useState('الفيزياء (علمي)');
   const [supervisorCode, setSupervisorCode] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string>(() => getTemporaryAvatar() || '');
   const [isProcessingAvatar, setIsProcessingAvatar] = useState(false);
   const [avatarStatus, setAvatarStatus] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isSelectingStage, setIsSelectingStage] = useState(false);
+  const [isSelectingSubject, setIsSelectingSubject] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -541,52 +608,67 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </p>
               </div>
 
-              {/* 3. Stage or Specialty */}
+              {/* 3. Stage Selector for Students (Custom Dark Modern Dialog - No native OS select) */}
               {role === 'student' && (
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-200">
+                  <label className="block text-xs font-bold mb-1.5 text-slate-200">
                     المرحلة الدراسية / الشعبة:
                   </label>
-                  <div className="relative">
-                    <select
-                      value={stage}
-                      onChange={(e) => setStage(e.target.value)}
-                      className="w-full pr-9 pl-3 py-2.5 border rounded-xl text-xs font-semibold bg-slate-950 border-slate-700 text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition-colors"
-                    >
-                      <option value="ثانوية عامة (علمي علوم)">ثانوية عامة (علمي علوم)</option>
-                      <option value="ثانوية عامة (علمي رياضة)">ثانوية عامة (علمي رياضة)</option>
-                      <option value="ثانوية عامة (شعبة أدبي)">ثانوية عامة (شعبة أدبي)</option>
-                      <option value="دبلوم تجارة (3 و 5 سنوات)">دبلوم تجارة (3 و 5 سنوات)</option>
-                      <option value="دبلوم صنايع وتكنولوجيا">دبلوم صنايع وتكنولوجيا</option>
-                      <option value="ثانوية عامة لغات (Languages)">ثانوية عامة لغات (Languages)</option>
-                      <option value="دورات جامعية و ICDL">دورات جامعية و ICDL</option>
-                    </select>
-                    <GraduationCap className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSelectingStage(true)}
+                    className="w-full pr-3.5 pl-3 py-2.5 border rounded-xl text-right bg-slate-950 border-slate-700 hover:border-yellow-400 text-slate-100 transition-all cursor-pointer flex items-center justify-between group shadow-sm focus:outline-hidden focus:ring-2 focus:ring-yellow-400/50"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/40 flex items-center justify-center shrink-0 font-bold text-sm shadow-inner">
+                        {STUDENT_TRACKS.find((t) => t.id === stage)?.icon || '🎓'}
+                      </div>
+                      <div className="truncate">
+                        <div className="text-xs font-bold text-white group-hover:text-yellow-300 transition-colors truncate">
+                          {stage}
+                        </div>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {STUDENT_TRACKS.find((t) => t.id === stage)?.desc || 'اضغط هنا لاختيار وتغيير شعبتك'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-yellow-400 bg-yellow-400/10 px-2.5 py-1 rounded-lg border border-yellow-400/30 shrink-0 mr-2 group-hover:bg-yellow-400 group-hover:text-slate-950 transition-all">
+                      <span>تغيير</span>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </div>
+                  </button>
                 </div>
               )}
 
+              {/* 3. Specialty Selector for Teachers (Custom Dark Modern Dialog) */}
               {role === 'teacher' && (
                 <div>
-                  <label className="block text-xs font-bold mb-1 text-slate-200">
+                  <label className="block text-xs font-bold mb-1.5 text-slate-200">
                     التخصص الدراسي والمادة:
                   </label>
-                  <div className="relative">
-                    <select
-                      value={subjectSpecialty}
-                      onChange={(e) => setSubjectSpecialty(e.target.value)}
-                      className="w-full pr-9 pl-3 py-2.5 border rounded-xl text-xs font-semibold bg-slate-950 border-slate-700 text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 transition-colors"
-                    >
-                      <option value="الفيزياء (علمي)">الفيزياء (علمي)</option>
-                      <option value="الكيمياء (علمي)">الكيمياء (علمي)</option>
-                      <option value="اللغة الإنجليزية (General & Advanced English)">اللغة الإنجليزية</option>
-                      <option value="اللغة العربية">اللغة العربية</option>
-                      <option value="الرياضيات البحتة والتطبيقية">الرياضيات</option>
-                      <option value="المحاسبة المالية للدبلومات">المحاسبة المالية للدبلومات</option>
-                      <option value="الرسم الفني الصناعي">الرسم الفني الصناعي</option>
-                    </select>
-                    <BookOpen className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSelectingSubject(true)}
+                    className="w-full pr-3.5 pl-3 py-2.5 border rounded-xl text-right bg-slate-950 border-slate-700 hover:border-emerald-400 text-slate-100 transition-all cursor-pointer flex items-center justify-between group shadow-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-400/50"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center shrink-0 font-bold text-sm shadow-inner">
+                        {TEACHER_SPECIALTIES.find((s) => s.id === subjectSpecialty)?.icon || '📚'}
+                      </div>
+                      <div className="truncate">
+                        <div className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors truncate">
+                          {subjectSpecialty}
+                        </div>
+                        <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                          {TEACHER_SPECIALTIES.find((s) => s.id === subjectSpecialty)?.desc || 'اضغط هنا لاختيار تخصصك'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/30 shrink-0 mr-2 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all">
+                      <span>تغيير</span>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </div>
+                  </button>
                 </div>
               )}
 
@@ -617,6 +699,175 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </p>
               </div>
             </form>
+
+            {/* Custom Dark Modern Stage Picker Modal (Styled just like ChangeTrackModal) */}
+            {isSelectingStage && (
+              <div
+                className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 text-white font-sans text-right animate-fadeIn select-none"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setIsSelectingStage(false);
+                }}
+              >
+                <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+                  {/* Header */}
+                  <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-yellow-400 text-slate-950 flex items-center justify-center font-black text-lg">
+                        🎓
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-white">
+                          اختيار الشعبة الدراسية
+                        </h3>
+                        <p className="text-[11px] text-slate-400">
+                          اختار شعبتك عشان نفلترلك المذكرات والأسئلة بدقة
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSelectingStage(false)}
+                      className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Tracks List */}
+                  <div className="p-4 overflow-y-auto space-y-2.5">
+                    {STUDENT_TRACKS.map((t) => {
+                      const isSelected = stage === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => {
+                            setStage(t.id);
+                            setIsSelectingStage(false);
+                          }}
+                          className={`w-full p-3.5 rounded-2xl border text-right transition-all flex items-center justify-between cursor-pointer ${
+                            isSelected
+                              ? 'bg-yellow-400/10 border-yellow-400 text-white shadow-md ring-1 ring-yellow-400/40'
+                              : 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-200'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>{t.title}</span>
+                              {isSelected && (
+                                <span className="bg-yellow-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-md">
+                                  الشعبة المختارة
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] sm:text-[11px] text-slate-400 mt-1 line-clamp-1">
+                              {t.desc}
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 mr-2">
+                            {isSelected ? (
+                              <div className="w-6 h-6 rounded-full bg-yellow-400 text-slate-950 flex items-center justify-center font-black">
+                                <Check className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border border-slate-700 bg-slate-900" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer Note */}
+                  <div className="p-3 bg-slate-950 border-t border-slate-800 text-center text-[11px] text-slate-400">
+                    <span>يمكنك تغيير شعبتك في أي وقت لاحقاً من الصفحة الرئيسية أو ملفك الشخصي</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Custom Dark Modern Teacher Specialty Picker */}
+            {isSelectingSubject && (
+              <div
+                className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 text-white font-sans text-right animate-fadeIn select-none"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setIsSelectingSubject(false);
+                }}
+              >
+                <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+                  {/* Header */}
+                  <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-lg">
+                        📚
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-white">
+                          اختيار مادة وتخصص المعلم
+                        </h3>
+                        <p className="text-[11px] text-slate-400">
+                          حدد تخصصك لمتابعة بنك الأسئلة والمذكرات الخاصة بمادتك
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSelectingSubject(false)}
+                      className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Specialties List */}
+                  <div className="p-4 overflow-y-auto space-y-2.5">
+                    {TEACHER_SPECIALTIES.map((s) => {
+                      const isSelected = subjectSpecialty === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            setSubjectSpecialty(s.id);
+                            setIsSelectingSubject(false);
+                          }}
+                          className={`w-full p-3.5 rounded-2xl border text-right transition-all flex items-center justify-between cursor-pointer ${
+                            isSelected
+                              ? 'bg-emerald-500/10 border-emerald-400 text-white shadow-md ring-1 ring-emerald-400/40'
+                              : 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-200'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-xs sm:text-sm flex items-center gap-1.5">
+                              <span>{s.title}</span>
+                              {isSelected && (
+                                <span className="bg-emerald-500 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-md">
+                                  التخصص المختار
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] sm:text-[11px] text-slate-400 mt-1 line-clamp-1">
+                              {s.desc}
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 mr-2">
+                            {isSelected ? (
+                              <div className="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-black">
+                                <Check className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full border border-slate-700 bg-slate-900" />
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );

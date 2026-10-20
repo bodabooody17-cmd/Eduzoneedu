@@ -4,75 +4,102 @@ export function filterQuestions<T extends { subject: string; track?: string; [ke
 ): T[] {
   const track =
     studentTrack ||
-    (typeof window !== 'undefined' ? localStorage.getItem('EduZone_Track') || localStorage.getItem('userBranch') || '' : '');
+    (typeof window !== 'undefined'
+      ? localStorage.getItem('EduZone_Track') || localStorage.getItem('userBranch') || ''
+      : '');
 
-  if (!track || track === 'all' || track.includes('عام') || track === 'الكل') {
+  if (!track || track === 'all' || track === 'الكل') {
     return questions;
   }
 
   return questions.filter((q) => {
-    const sub = (q.subject || '').toLowerCase().trim();
+    const sub = (q.subject || '').trim();
+    const subLower = sub.toLowerCase();
 
-    // 1. شعبة أدبي: لغة عربية + لغة إنجليزية + تاريخ + جغرافيا + فلسفة ومنطق + علم نفس واجتماع
-    if (track.includes('أدبي') || track === 'thanawya_arts') {
-      const allowed = ['عربي', 'عربية', 'إنجليزي', 'انجليزي', 'إنجليزية', 'انجليزية', 'تاريخ', 'جغرافيا', 'فلسفة', 'منطق', 'علم نفس', 'اجتماع'];
-      const matches = allowed.some((a) => sub.includes(a));
-      if (!matches) return false;
-      // استبعاد أي مادة علمية أو تجارية صريحة
-      const forbidden = ['فيزياء', 'كيمياء', 'أحياء', 'احياء', 'جيولوجيا', 'رياضيات', 'استاتيكا', 'محاسبة', 'رسم فني', 'صناعي'];
-      if (forbidden.some((f) => sub.includes(f))) return false;
-      return true;
-    }
-
-    // 2. شعبة علمي علوم: لغة عربية + لغة إنجليزية + فيزياء + كيمياء + أحياء + جيولوجيا
-    if (track.includes('علمي علوم') || (track === 'thanawya_science' && !track.includes('رياضة'))) {
-      const allowed = ['عربي', 'عربية', 'إنجليزي', 'انجليزي', 'إنجليزية', 'انجليزية', 'فيزياء', 'كيمياء', 'أحياء', 'احياء', 'جيولوجيا'];
-      const matches = allowed.some((a) => sub.includes(a));
-      if (!matches) return false;
-      // استبعاد المواد الأدبية والرياضية والتجارية
-      const forbidden = ['تاريخ', 'جغرافيا', 'فلسفة', 'علم نفس', 'رياضيات', 'استاتيكا', 'محاسبة', 'رسم فني'];
-      if (forbidden.some((f) => sub.includes(f))) return false;
-      return true;
-    }
-
-    // 3. شعبة علمي رياضة: لغة عربية + لغة إنجليزية + فيزياء + كيمياء + رياضيات + استاتيكا
-    if (track.includes('علمي رياضة') || track.includes('رياضة')) {
-      const allowed = ['عربي', 'عربية', 'إنجليزي', 'انجليزي', 'إنجليزية', 'انجليزية', 'فيزياء', 'كيمياء', 'رياضيات', 'رياضة', 'استاتيكا'];
-      const matches = allowed.some((a) => sub.includes(a));
-      if (!matches) return false;
-      // استبعاد الأحياء والجيولوجيا والمواد الأدبية
-      const forbidden = ['أحياء', 'احياء', 'جيولوجيا', 'تاريخ', 'جغرافيا', 'فلسفة', 'علم نفس', 'محاسبة', 'رسم فني'];
-      if (forbidden.some((f) => sub.includes(f))) return false;
-      return true;
-    }
-
-    // 4. مدارس اللغات: English, Arabic, Physics, Chemistry, Biology, Math, Statics
+    // 1. شعبة مدارس اللغات: Physics, Chemistry, Biology, Math, Statics باللغة الإنجليزية + اللغة الإنجليزية
     if (track.includes('لغات') || track === 'languages' || track.toLowerCase().includes('lang')) {
-      const allowed = ['إنجليزي', 'انجليزي', 'عربي', 'فيزياء', 'كيمياء', 'أحياء', 'احياء', 'رياضيات', 'استاتيكا', 'math', 'physics', 'chemistry', 'biology', 'statics'];
+      if (
+        q.track === 'languages' ||
+        sub.includes('(Languages)') ||
+        subLower.includes('physics') ||
+        subLower.includes('chemistry') ||
+        subLower.includes('biology') ||
+        subLower.includes('statics') ||
+        subLower.includes('mathematics') ||
+        subLower.includes('math')
+      ) {
+        return true;
+      }
+      if (sub === 'اللغة الإنجليزية' || subLower.includes('english')) {
+        return true;
+      }
+      return false;
+    }
+
+    // لجميع الشعب الأخرى (غير اللغات): استبعاد أسئلة اللغات الإنجليزية المخصصة
+    if (q.track === 'languages' || sub.includes('(Languages)')) {
+      return false;
+    }
+
+    // 2. شعبة أدبي: تاريخ + جغرافيا + فلسفة ومنطق + علم نفس واجتماع + عربي + إنجليزي فقط
+    if (track.includes('أدبي') || track === 'thanawya_arts') {
+      const allowed = [
+        'التاريخ',
+        'الجغرافيا',
+        'الفلسفة والمنطق',
+        'علم النفس والاجتماع',
+        'اللغة العربية',
+        'اللغة الإنجليزية',
+      ];
       return allowed.some((a) => sub.includes(a));
     }
 
-    // 5. دبلوم تجارة: محاسبة مالية + إدارة أعمال + لغة عربية + لغة إنجليزية
-    if (track.includes('تجارة') || track === 'commerce_diploma') {
-      const allowed = ['محاسبة', 'ادارة', 'إدارة', 'اقتصاد', 'عربي', 'إنجليزي', 'تجاري'];
-      const matches = allowed.some((a) => sub.includes(a));
-      if (!matches) return false;
-      const forbidden = ['فيزياء', 'كيمياء', 'أحياء', 'جيولوجيا', 'تاريخ', 'جغرافيا', 'فلسفة', 'علم نفس', 'رسم فني'];
-      return !forbidden.some((f) => sub.includes(f));
+    // 3. شعبة علمي علوم: فيزياء + كيمياء + أحياء + جيولوجيا + عربي + إنجليزي فقط
+    if (track.includes('علمي علوم') || (track === 'thanawya_science' && !track.includes('رياضة'))) {
+      const allowed = [
+        'الفيزياء',
+        'الكيمياء',
+        'الأحياء',
+        'الجيولوجيا',
+        'اللغة العربية',
+        'اللغة الإنجليزية',
+      ];
+      return allowed.some((a) => sub.includes(a));
     }
 
-    // 6. دبلوم صنايع / فني: رسم فني وصناعي + ميكانيكا + لغة عربية + لغة إنجليزية
-    if (track.includes('صنايع') || track.includes('صناعي') || track === 'technical_industrial' || track === 'technical_secondary') {
-      const allowed = ['رسم فني', 'صناعي', 'ميكانيكا', 'كهرباء', 'عربي', 'إنجليزي'];
-      const matches = allowed.some((a) => sub.includes(a));
-      if (!matches) return false;
-      const forbidden = ['أحياء', 'جيولوجيا', 'تاريخ', 'جغرافيا', 'فلسفة', 'علم نفس', 'محاسبة'];
-      return !forbidden.some((f) => sub.includes(f));
+    // 4. شعبة علمي رياضة: فيزياء + كيمياء + رياضيات + استاتيكا + عربي + إنجليزي فقط
+    if (track.includes('علمي رياضة') || track.includes('رياضة')) {
+      const allowed = [
+        'الفيزياء',
+        'الكيمياء',
+        'الرياضيات',
+        'الاستاتيكا',
+        'اللغة العربية',
+        'اللغة الإنجليزية',
+      ];
+      return allowed.some((a) => sub.includes(a));
+    }
+
+    // 5. دبلوم تجارة: محاسبة مالية + إدارة أعمال + عربي + إنجليزي فقط
+    if (track.includes('تجارة') || track === 'commerce_diploma') {
+      const allowed = ['المحاسبة المالية', 'إدارة الأعمال', 'اللغة العربية', 'اللغة الإنجليزية'];
+      return allowed.some((a) => sub.includes(a));
+    }
+
+    // 6. دبلوم صنايع / فني: رسم فني وصناعي + عربي + إنجليزي فقط
+    if (
+      track.includes('صنايع') ||
+      track.includes('صناعي') ||
+      track === 'technical_industrial' ||
+      track === 'technical_secondary'
+    ) {
+      const allowed = ['الرسم الفني والصناعي', 'اللغة العربية', 'اللغة الإنجليزية'];
+      return allowed.some((a) => sub.includes(a));
     }
 
     // 7. دورات ICDL وحاسب آلي
     if (track.includes('ICDL') || track === 'university_courses') {
-      const allowed = ['icdl', 'حاسب', 'أوفيس', 'excel', 'word'];
+      const allowed = ['مهارات الحاسب و ICDL', 'اللغة الإنجليزية'];
       return allowed.some((a) => sub.includes(a));
     }
 

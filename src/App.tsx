@@ -253,6 +253,16 @@ export default function App() {
 
     const handleTrackSync = () => {
       setMyTrack(getMyTrackData());
+      const trk = localStorage.getItem('EduZone_Track') || '';
+      if (trk.includes('لغات')) {
+        setActiveTrack('languages');
+      } else if (trk.includes('تجارة') || trk.includes('صنايع')) {
+        setActiveTrack('technical_industrial');
+      } else if (trk.includes('علمي') || trk.includes('أدبي')) {
+        setActiveTrack('thanawya_science');
+      } else if (trk.includes('ICDL')) {
+        setActiveTrack('university_courses');
+      }
     };
     window.addEventListener('storage', handleTrackSync);
     window.addEventListener('eduzone_track_changed', handleTrackSync);
@@ -291,6 +301,15 @@ export default function App() {
         localStorage.setItem('userBranch', user.stage);
       } catch (e) {
         console.error(e);
+      }
+      if (user.stage.includes('لغات')) {
+        setActiveTrack('languages');
+      } else if (user.stage.includes('تجارة') || user.stage.includes('صنايع')) {
+        setActiveTrack('technical_industrial');
+      } else if (user.stage.includes('علمي') || user.stage.includes('أدبي')) {
+        setActiveTrack('thanawya_science');
+      } else if (user.stage.includes('ICDL')) {
+        setActiveTrack('university_courses');
       }
     }
     setMyTrack(getMyTrackData());
@@ -618,11 +637,8 @@ export default function App() {
   );
 
   const languagesSummaries = useMemo(
-    () =>
-      filteredSummaries.filter(
-        (s) => s.track === 'languages'
-      ),
-    [filteredSummaries]
+    () => SUMMARY_ITEMS.filter((s) => s.track === 'languages'),
+    []
   );
 
   const technicalAndCommerceSummaries = useMemo(
@@ -722,19 +738,26 @@ export default function App() {
           />
 
           <div id="browse-sections" className="w-full px-3 space-y-6 pb-6">
-            {/* بنر الشعبة الدراسية المسجلة مع زر تغيير الشعبة */}
+            {/* بنر الشعبة الدراسية المسجلة مع زر تغيير الشعبة بتصميم داكن مريح للعين */}
             {myTrack && (
-              <div className="bg-yellow-400 text-black p-3.5 rounded-2xl m-3 flex items-center justify-between font-bold shadow-md">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">📚</span>
-                  <span>موادك: {myTrack?.name || trackStorageName}</span>
+              <div className="bg-[#121629] border border-slate-800/90 text-slate-100 p-3 sm:p-3.5 rounded-2xl flex items-center justify-between font-bold shadow-lg shadow-black/30">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 flex items-center justify-center text-sm shrink-0 shadow-inner">
+                    📚
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-normal">موادك المخصصة حسب شعبتك:</span>
+                    <span className="text-xs sm:text-sm font-black text-indigo-200">
+                      {myTrack?.name || trackStorageName}
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsChangeTrackModalOpen(true)}
-                  className="bg-slate-950 hover:bg-black text-yellow-400 px-3.5 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow cursor-pointer active:scale-95"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-700 shadow-xs cursor-pointer active:scale-95 shrink-0"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
                   <span>تغيير الشعبة</span>
                 </button>
               </div>
@@ -850,37 +873,35 @@ export default function App() {
                       </div>
                     ))}
 
-                    {/* Show Video Lessons card only if visitor has no specific track set */}
-                    {!trackStorageName && (
-                      <div
-                        onClick={() => {
-                          setActiveTrack('free_courses');
-                          window.scrollTo({ top: 380, behavior: 'smooth' });
-                        }}
-                        className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
-                              <Video className="w-5 h-5" />
-                            </div>
-                            <span className="text-[11px] font-bold bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full border border-red-400/30">
-                              {counts.free_courses} معسكرات
-                            </span>
+                    {/* Video Lessons card permanently visible across all tracks */}
+                    <div
+                      onClick={() => {
+                        setActiveTrack('free_courses');
+                        window.scrollTo({ top: 380, behavior: 'smooth' });
+                      }}
+                      className="bg-slate-900 text-white rounded-2xl p-4 shadow-md shadow-black/25 border border-slate-800 transition-all duration-150 active:scale-[0.99] cursor-pointer group flex flex-col justify-between"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center font-black group-hover:scale-105 transition-transform">
+                            <Video className="w-5 h-5" />
                           </div>
-                          <h3 className="text-base font-black text-white group-hover:text-red-300 transition-colors">
-                            المحاضرات ومعسكرات الفيديو HD
-                          </h3>
-                          <p className="text-xs text-slate-300 leading-relaxed">
-                            معسكرات إنقاذ كاملة بجودة 1080p Full HD مع تحصيل +80 XP لكل درس تشاهده.
-                          </p>
+                          <span className="text-[11px] font-bold bg-red-500/20 text-red-300 px-2.5 py-0.5 rounded-full border border-red-400/30">
+                            {counts.free_courses} معسكرات
+                          </span>
                         </div>
-                        <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-red-300">
-                          <span>مشاهدة معسكرات الفيديو</span>
-                          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        </div>
+                        <h3 className="text-base font-black text-white group-hover:text-red-300 transition-colors">
+                          المحاضرات ومعسكرات الفيديو HD
+                        </h3>
+                        <p className="text-xs text-slate-300 leading-relaxed">
+                          معسكرات إنقاذ كاملة بجودة 1080p Full HD مع تحصيل +80 XP لكل درس تشاهده.
+                        </p>
                       </div>
-                    )}
+                      <div className="mt-3.5 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-bold text-red-300">
+                        <span>مشاهدة معسكرات الفيديو</span>
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1346,6 +1367,7 @@ export default function App() {
           onOpenPricingModal={() => setIsPricingModalOpen(true)}
           userRole={currentUser?.role}
           currentUser={currentUser}
+          currentTrack={trackStorageName || myTrack?.name || ''}
           onOpenAuthModal={() => {
             setAuthActionPrompt('دخول بنك الأسئلة الشامل (1600+ سؤال)');
             setPendingAction(() => () => setIsQuizModalOpen(true));
