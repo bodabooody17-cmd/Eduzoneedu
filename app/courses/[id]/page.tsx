@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CourseView } from '../../../components/CourseView';
 import { VIDEO_COURSES, SUMMARY_ITEMS } from '../../../src/data/coursesData';
 import { isAllowedForTrack } from '@/lib/strictFilter';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
@@ -61,8 +60,24 @@ export default function CoursePage({ params }: PageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 py-6">
-      <CourseView course={course} />
+    <main className="min-h-screen bg-slate-950 text-slate-100 py-6 text-right">
+      <div className="w-full max-w-4xl mx-auto p-4 space-y-4">
+        <div className="space-y-1">
+          <h1 className="text-xl font-black">{course.title}</h1>
+          <p className="text-xs text-slate-400">المحاضر: {course.instructor}</p>
+        </div>
+        <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <h3 className="text-sm font-bold text-emerald-400">عن هذا المحتوى التعليمي</h3>
+          <p className="text-xs text-slate-300 leading-relaxed">{course.description}</p>
+        </div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300"
+        >
+          <ArrowRight className="w-4 h-4" />
+          <span>العودة للرئيسية</span>
+        </Link>
+      </div>
     </main>
   );
 }

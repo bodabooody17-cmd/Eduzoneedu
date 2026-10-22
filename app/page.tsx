@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { getMyTrackData, TRACKS_CONFIG } from '@/lib/tracks';
 import { isAllowedForTrack } from '@/lib/strictFilter';
 import { SUMMARY_ITEMS } from '../src/data/coursesData';
-import AdsterraAd from '../components/AdsterraAd';
 import { Footer } from '../src/components/Footer';
 import { BookOpen, Wrench, GraduationCap, Video, BookMarked, Sparkles } from 'lucide-react';
 
@@ -212,9 +211,6 @@ export default function HomePage() {
             ))}
           </div>
         </section>
-
-        {/* Adsterra Banner: بعد قسم "الأقسام والمراحل التعليمية" وقبل الفوتر */}
-        <AdsterraAd />
       </main>
 
       {/* Footer */}

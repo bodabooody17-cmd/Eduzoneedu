@@ -52,6 +52,11 @@ export interface CourseLesson {
   summary: string;
   keyTakeaways?: string[];
   videoUrl?: string;
+  imageUrl?: string;
+  boardTitle?: string;
+  fullTranscription?: string[];
+  examples?: string[];
+  examTip?: string;
 }
 
 export interface VideoCourse {
@@ -68,6 +73,7 @@ export interface VideoCourse {
   track?: EducationalTrack;
   planType?: 'free' | 'vip' | 'paid';
   priceBadge?: string;
+  format?: 'video' | 'reader';
 }
 
 export interface QuizQuestion {

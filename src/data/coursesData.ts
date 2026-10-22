@@ -822,6 +822,508 @@ export const SUMMARY_ITEMS: SummaryItem[] = [
 
 export const VIDEO_COURSES: VideoCourse[] = [
   {
+    id: 'course-english-masterclass',
+    title: 'كورس اللغة الإنجليزية الشامل من الصفر حتى الإتقان (15 محاضرة تأسيسية مقروءة)',
+    instructor: 'منصة EduZone التعليمية',
+    category: 'قسم الكورسات والتأسيس العام',
+    description: 'المرجع التأسيسي الكامل المعتمد لمنصة EduZone لجميع الشعب والطلاب: مذكرة قراءة تفاعلية مدعومة بسبورات عالية الدقة وشرح مكتوب بخط كبير وواضح لقواعد اللغة، أجزاء الكلام، الأزمنة الـ 12، حروف الجر، وتركيب الجمل.',
+    duration: '15 محاضرة مقروءة ومفصلة',
+    lessonsCount: 15,
+    level: 'من الصفر إلى الاحتراف',
+    badgeColor: 'bg-emerald-600',
+    track: 'general',
+    planType: 'free',
+    priceBadge: 'مجاني بالكامل',
+    format: 'reader',
+    lessons: [
+      {
+        id: 'english-les-01',
+        title: 'المحاضرة 1: أساسيات الأبجدية، حروف العلة والصوامت ورموز الـ IPA الصوتية',
+        duration: '25 دقيقة قراءة',
+        summary: 'دراسة الحروف الإنجليزية الـ 26، وتقسيمها إلى حروف متحركة (Vowels) وحروف ساكنة (Consonants)، وأساسيات مخارج الأصوات بالرموز الصوتية الدولية (IPA).',
+        keyTakeaways: [
+          'حروف العلة الـ 5 الأساسية: (A, E, I, O, U) وأحياناً حرف Y يعتبر شبه علة (Semi-vowel)',
+          'الحروف الساكنة الـ 21 (Consonants) ومواضع حبس وخروج الهواء',
+          'قاعدة نطق حرف C: يُنطق /s/ إذا جاء بعده (e, i, y) مثل City و Center، ويُنطق /k/ مع بقية الحروف مثل Cat و Car'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-01.jpg',
+        boardTitle: 'سبورة الشرح: الأبجدية ومخارج الأصوات ورموز الـ IPA',
+        fullTranscription: [
+          '📌 1. عدد حروف اللغة الإنجليزية: تتكون اللغة الإنجليزية من 26 حرفاً، تُكتب بصيغتين: الحروف الكبيرة (Capital / Upper Case: A, B, C...) والحروف الصغيرة (Small / Lower Case: a, b, c...).',
+          '📌 2. حروف العلة (Vowels): هي (A - E - I - O - U). لا توجد كلمة إنجليزية ذات معنى تخلو من صوت متحرك أو حرف Y كبديل للصوت المتحرك (مثل: By, Cry, Sky). حروف العلة هي المسؤولة عن تشكيل حركة الفم (فتح، كسر، ضم).',
+          '📌 3. الحروف الساكنة (Consonants): عددها 21 حرفاً، وتعتمد على تلامس اللسان أو الشفاه أو الأسنان عند خروج الصوت (مثل: B, D, K, M, T).',
+          '📌 4. رموز الـ IPA الصوتية (International Phonetic Alphabet): في الإنجليزية الحرف قد يُنطق بأكثر من صوت. مثلاً حرف A في Cat يُنطق /æ/، وفي Father يُنطق /ɑː/، وفي Call يُنطق /ɔː/.'
+        ],
+        examples: [
+          'Cat (/kæt/) -> قطة | صوت C ينطق /k/',
+          'City (/ˈsɪti/) -> مدينة | صوت C ينطق /s/ لمجيء حرف i بعده',
+          'Apple (/ˈæpl/) -> تفاحة | تبدأ بحرف علة قصير',
+          'University (/ˌjuːnɪˈvɜːrsəti/) -> جامعة | تبدأ بصوت شبه ساكن /j/'
+        ],
+        examTip: 'تذكر دائماً أن أداة التعريف (a / an) تعتمد على الصوت وليس الحرف المكتوب! نقول "an hour" لأن حرف h صامت وتبدأ بصوت علة، ونقول "a university" لأن الصوت الأول /juː/ صوت شبه ساكن.'
+      },
+      {
+        id: 'english-les-02',
+        title: 'المحاضرة 2: أجزاء الكلام في اللغة الإنجليزية (Parts of Speech)',
+        duration: '30 دقيقة قراءة',
+        summary: 'تصنيف كل كلمة في اللغة الإنجليزية إلى 8 فئات رئيسية تحدد وظيفتها النحوية وموقعها في بناء الجملة الصحيحة.',
+        keyTakeaways: [
+          'الأسماء (Nouns): تشير للشخص أو المكان أو الشيء أو الفكرة (Teacher, Cairo, Pen, Hope)',
+          'الصفات (Adjectives): تسبق الاسم الموصوف دائماً (A tall building) ولا تجمع الصفات في الإنجليزية',
+          'الأفعال (Verbs): محرك الجملة الذي يوضح الحدث والزمن',
+          'الظروف (Adverbs): تصف كيفية حدوث الفعل أو درجة الصفة وغالباً تنتهي بـ ly (Quickly, Extremely)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-02.jpg',
+        boardTitle: 'سبورة الشرح: خريطة أجزاء الكلام Parts of Speech',
+        fullTranscription: [
+          '📌 1. Noun (الاسم): اسم شخص (Ali)، مكان (Egypt)، جماد (Table)، أو فكرة معنوية (Peace).',
+          '📌 2. Pronoun (الضمير): يحل محل الاسم لتجنب التكرار (He, She, It, They, We).',
+          '📌 3. Verb (الفعل): كلمة تعبر عن حركة أو حدث أو حالة كينونة (Run, Think, Is, Write).',
+          '📌 4. Adjective (الصفة): تصف الاسم وتأتي قبله: "An intelligent student" أو تأتي بعد فعل To Be: "The student is intelligent".',
+          '📌 5. Adverb (الظرف/الحال): يصف الفعل أو الصفة أو ظرفاً آخر: "He drives carefully" (يصف القيادة).',
+          '📌 6. Preposition (حرف الجر): يحدد العلاقة المكانية أو الزمانية (In, On, At, Under, With).',
+          '📌 7. Conjunction (حرف العطف): يربط بين الكلمات أو الجمل (And, But, Or, Because, So).',
+          '📌 8. Interjection (صيغة التعجب): تعبر عن مشاعر مفاجئة وتتبع بعلامة تعجب (Wow!, Oh!, Alas!).'
+        ],
+        examples: [
+          'Noun: "The doctor arrived on time." (doctor اسم)',
+          'Adjective: "She bought a comfortable chair." (comfortable تسبق chair)',
+          'Adverb: "He completed the test successfully." (successfully تصف طريقة إنجاز الاختبار)',
+          'Conjunction: "I was tired, but I kept studying." (but تفيد التناقض)'
+        ],
+        examTip: 'في اللغة الإنجليزية، الصفة تسبق الاسم ولا تجمع أبداً! نقول "Three red cars" ولا نقول "reds cars".'
+      },
+      {
+        id: 'english-les-03',
+        title: 'المحاضرة 3: منظومة الضمائر وأسماء الإشارة وأدوات النكرة والتعريف',
+        duration: '35 دقيقة قراءة',
+        summary: 'الجدول الشامل لضمائر الفاعل والمفعول وصفات وضمائر الملكية، واستخدامات أسماء الإشارة للقريب والبعيد وأدوات a, an, the.',
+        keyTakeaways: [
+          'ضمائر الفاعل (I, He, She, It, We, You, They) تأتي قبل الفعل الأساسي',
+          'ضمائر المفعول (Me, Him, Her, It, Us, You, Them) تأتي بعد الفعل أو بعد حرف الجر',
+          'صفات الملكية (My, His, Her...) يتبعها اسم دائماً، بينما ضمائر الملكية (Mine, Hers, Ours...) تأتي منفردة دون اسم',
+          'This/These للقريب (مفرد/جمع)، و That/Those للبعيد (مفرد/جمع)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-03.jpg',
+        boardTitle: 'سبورة الشرح: جدول الضمائر وأدوات الإشارة والتعريف',
+        fullTranscription: [
+          '📌 1. جدول الضمائر المتكامل:',
+          '• ضمائر الفاعل: I (أنا) | He (هو) | She (هي) | It (هو/هي لغير العاقل) | We (نحن) | You (أنت/أنتم) | They (هم).',
+          '• ضمائر المفعول: Me | Him | Her | It | Us | You | Them. مثال: "The teacher helped us."',
+          '• صفات الملكية (Possessive Adjectives): My car, His book, Her house, Our school, Their project.',
+          '• ضمائر الملكية (Possessive Pronouns): The car is mine, The book is his, The idea is ours.',
+          '📌 2. أسماء الإشارة (Demonstratives):',
+          '• This: للمفرد القريب (This is a pen).',
+          '• That: للمفرد البعيد (That is a plane in the sky).',
+          '• These: للجمع القريب (These are my friends).',
+          '• Those: للجمع البعيد (Those are stars).',
+          '📌 3. أدوات النكرة والمعرفة (Articles):',
+          '• A: قبل الاسم المفرد النكرة البادئ بصوت ساكن (A car, A book).',
+          '• An: قبل الاسم المفرد النكرة البادئ بصوت متحرك (An apple, An orange, An umbrella).',
+          '• The: لأداة التعريف عند تحديد شيء معروف للمستمع، أو الأشياء الفريدة في العالم (The sun, The Nile).'
+        ],
+        examples: [
+          'Subject vs Object: "She (فاعل) called me (مفعول) yesterday."',
+          'Possessive Adj vs Pronoun: "This is my jacket (صفة ملكية) -> This jacket is mine (ضمير ملكية)."',
+          'Articles: "I saw a doctor. The doctor was very kind." (في المرة الثانية عرف بـ the)'
+        ],
+        examTip: 'انتبه: Its بدون فاصلة عليا هي صفة ملكية لغير العاقل (The dog wagged its tail). أما It\'s بالفاصلة فهي اختصار لـ It is أو It has!'
+      },
+      {
+        id: 'english-les-04',
+        title: 'المحاضرة 4: فعل الكينونة To Be (المثبت، المنفي، السؤال والاستخدامات)',
+        duration: '25 دقيقة قراءة',
+        summary: 'إتقان أهم فعل في اللغة الإنجليزية (فعل يكون) في المضارع والماضي والتصريف الثالث، مع صياغة الجمل المثبتة والمنفية والأسئلة.',
+        keyTakeaways: [
+          'تصريف الحاضر: I am | He/She/It is | We/You/They are',
+          'تصريف الماضي: I/He/She/It was | We/You/They were',
+          'التصريف الثالث (Past Participle): Been',
+          'النفي بإضافة not مباشرة بعد فعل To Be بدون الحاجة لفعل مساعد خارجي'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-04.jpg',
+        boardTitle: 'سبورة الشرح: تصريفات واستخدامات Verb To Be',
+        fullTranscription: [
+          '📌 1. تصريف المضارع (Present Simple of To Be):',
+          '• I am (اختصار: I\'m) - مثال: I am a passionate student.',
+          '• He is / She is / It is (اختصار: He\'s, She\'s, It\'s) - مثال: He is brilliant.',
+          '• We are / You are / They are (اختصار: We\'re, You\'re, They\'re) - مثال: They are ready.',
+          '📌 2. تصريف الماضي (Past Simple of To Be):',
+          '• Was: مع المفرد (I was, He was, She was, It was) - مثال: I was at home yesterday.',
+          '• Were: مع الجمع والمخاطب (We were, You were, They were) - مثال: We were very excited.',
+          '📌 3. النفي وتكوين السؤال:',
+          '• النفي: Subject + To Be + not (He is not / isn\'t / They are not / aren\'t).',
+          '• السؤال (Yes/No Question): نبدأ بفعل To Be مقدماً على الفاعل: "Are you ready? -> Yes, I am. / No, I\'m not."'
+        ],
+        examples: [
+          'العمر والمهنة: "I am 18 years old. My father is an accountant."',
+          'المشاعر والصفات: "She is happy today because she passed the exam."',
+          'سؤال: "Was the exam difficult? -> No, it was easy."'
+        ],
+        examTip: 'في اللغة الإنجليزية لا توجد جملة اسمية بدون فعل! جملة "أحمد طبيب" في العربية تصبح بالإنجليزية إلزامياً: "Ahmed IS a doctor". حذف فعل Is يعد خطأ جسيماً.'
+      },
+      {
+        id: 'english-les-05',
+        title: 'المحاضرة 5: الخريطة الشاملة لجميع الأزمنة الـ 12 في الإنجليزية (Tenses Overview)',
+        duration: '35 دقيقة قراءة',
+        summary: 'المخطط البانورامي الجامع للأزمنة الـ 12: المقارنة بين البسيط والمستمر والتام والتام المستمر في أبعاد الماضي والحاضر والمستقبل.',
+        keyTakeaways: [
+          'الـ 4 أشكال الأساسية: Simple (بسيط)، Continuous (مستمر)، Perfect (تام)، Perfect Continuous (تام مستمر)',
+          'البسيط: يعبر عن حقيقة أو روتين أو حدث تم',
+          'المستمر: يحتوي دائماً على verb + ing ويعبر عن استمرارية الحدث',
+          'التام: يحتوي دائماً على have/has/had + التصريف الثالث (P.P) ويعبر عن اكتمال الحدث وارتباطه بنقطة زمنية'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-05.jpg',
+        boardTitle: 'سبورة الشرح: المخطط الشامل للأزمنة الـ 12',
+        fullTranscription: [
+          '📌 1. أزمنة المضارع (Present Tenses):',
+          '• Present Simple: I work (روتين وحقائق)',
+          '• Present Continuous: I am working (حدث جاري الآن)',
+          '• Present Perfect: I have worked (حدث تم مؤخراً أو له أثر حاضر)',
+          '• Present Perfect Continuous: I have been working (حدث بدأ في الماضي ومستمر حتى الآن)',
+          '📌 2. أزمنة الماضي (Past Tenses):',
+          '• Past Simple: I worked (حدث انتهى تماماً في نقطة ماضية)',
+          '• Past Continuous: I was working (حدث كان مستمراً في وقت محدد بالماضي)',
+          '• Past Perfect: I had worked (الحدث الأقدم قبل حدث ماضٍ آخر)',
+          '• Past Perfect Continuous: I had been working (استمرارية الحدث قبل نقطة ماضية)',
+          '📌 3. أزمنة المستقبل (Future Tenses):',
+          '• Future Simple: I will work (قرار سريع أو تنبؤ)',
+          '• Future Continuous: I will be working (سيكون مستمراً في نقطة بالمستقبل)',
+          '• Future Perfect: I will have worked (سيكون مكتملاً قبل وقت معين مستقبلاً)'
+        ],
+        examples: [
+          'مقارنة مباشرة: "I study English every day" (Present Simple)',
+          '"I am studying English right now" (Present Continuous)',
+          '"I have studied English for 3 years" (Present Perfect)'
+        ],
+        examTip: 'لحفظ الأزمنة بسهولة: أي زمن اسمه "Continuous" يحتوي حتماً على ing! وأي زمن اسمه "Perfect" يحتوي حتماً على have/has/had + التصريف الثالث (V3)!'
+      },
+      {
+        id: 'english-les-06',
+        title: 'المحاضرة 6: زمن المضارع البسيط (Present Simple) وقواعد s/es والكلمات الدالة',
+        duration: '30 دقيقة قراءة',
+        summary: 'شرح زمن العادات والحقائق والمواعيد الثابتة، مع تفصيل شروط إضافة s أو es أو ies مع ضمائر مفرد الغائب.',
+        keyTakeaways: [
+          'مع (I, We, You, They): الفعل في المصدر (Infinitive) بدون إضافات',
+          'مع (He, She, It والمفرد): نضيف (s / es / ies) للفعل',
+          'قواعد إضافة es: إذا انتهى الفعل بـ (ss, sh, ch, x, z, o) مثل: washes, watches, goes, fixes',
+          'النفي: don\'t مع الجمع والمخاطب، و doesn\'t مع المفرد (ويعود الفعل بعدها للمصدر دائماً)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-06.jpg',
+        boardTitle: 'سبورة الشرح: أسرار المضارع البسيط Present Simple',
+        fullTranscription: [
+          '📌 1. الاستخدامات الأربعة للمضارع البسيط:',
+          '1. الحقائق العلمية العامة: The earth revolves around the sun.',
+          '2. العادات والروتين المتكرر: He plays football every Friday.',
+          '3. المواقف الثابتة الدائمة: She lives in Cairo.',
+          '4. جداول المواعيد الثابتة (قطارات، امتحانات، سينما): The train arrives at 9:00 PM.',
+          '📌 2. قاعدة إضافة (ies):',
+          'إذا انتهى الفعل بحرف Y مسبوق بحرف ساكن، يُحذف الـ Y ونضع ies: (Study -> Studies, Cry -> Cries). أما إذا كان الـ Y مسبوقاً بحرف علة، نضيف s فقط دون حذف: (Play -> Plays, Stay -> Stays).',
+          '📌 3. ظروف التكرار (Adverbs of Frequency):',
+          'Always (دائماً 100%) - Usually (عادة 80%) - Often (غالباً 60%) - Sometimes (أحياناً 50%) - Rarely (نادراً 10%) - Never (أبداً 0%). تأتي هذه الظروف قبل الفعل الأساسي وبعد فعل To Be: (He always arrives on time / He is always happy).'
+        ],
+        examples: [
+          'إثبات: "Sarah speaks three languages fluently."',
+          'نفي: "She doesn\'t speak German." (لاحظ حذف الـ s بعد doesn\'t)',
+          'سؤال: "Do you enjoy learning English? -> Yes, I do."'
+        ],
+        examTip: 'الخطأ الشائع جداً في الامتحانات: وضع s مع الفعل بعد doesn\'t! الصحيح دائماً: "He doesn\'t like milk" وليس "He doesn\'t likes milk".'
+      },
+      {
+        id: 'english-les-07',
+        title: 'المحاضرة 7: زمن المضارع المستمر (Present Continuous) وأفعال الحالة (Stative Verbs)',
+        duration: '28 دقيقة قراءة',
+        summary: 'شرح صيغة am/is/are + verb + ing، والكلمات الدالة مثل Look و Listen و Now، وقائمة أفعال الحالة التي لا تقبل الاستمرار.',
+        keyTakeaways: [
+          'التكوين: Subject + (am / is / are) + Verb-ing',
+          'الاستخدام: أحداث تجري أثناء لحظة الكلام أو مواقف مؤقتة',
+          'قاعدة مضاعفة الحرف: إذا انتهى الفعل بساكن مسبوق بمتحرك واحد قصير، نضاعف الساكن: (run -> running, sit -> sitting)',
+          'أفعال الحالة (Stative Verbs): أفعال المشاعر والحواس والإدراك والملكية لا تُستخدم في صيغة الاستمرار'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-07.jpg',
+        boardTitle: 'سبورة الشرح: المضارع المستمر Present Continuous',
+        fullTranscription: [
+          '📌 1. التكوين في الجمل:',
+          '• الإثبات: I am reading a book now / They are playing tennis.',
+          '• النفي: I am not reading / They aren\'t playing.',
+          '• السؤال: Are you listening to me? -> Yes, I am.',
+          '📌 2. الكلمات الدالة (Keywords):',
+          'Now (الآن) - At the moment (في هذه اللحظة) - At present (حالياً) - Look! (انظر!) - Listen! (استمع!) - Right now.',
+          '📌 3. أفعال الحالة (Stative Verbs):',
+          'أفعال لا تأخذ صيغة ing لأنها تصف حالة ثابتة وليس حركة مستمرة. تشمل:',
+          '• الحواس والمشاعر: Love, Like, Hate, Prefer, Want, Need.',
+          '• التفكير والإدراك: Know, Understand, Believe, Remember, Forget.',
+          '• الملكية: Have, Own, Belong, Possess.',
+          'مثال: نقول "I know the answer" ولا نقول "I am knowing the answer".'
+        ],
+        examples: [
+          'حدث جاري الآن: "Look! It is raining outside."',
+          'ترتيب مستقبلي مؤكد: "We are visiting our grandparents this weekend."',
+          'أفعال الحالة: "I understand the lesson clearly." (خطأ أن تقول: I am understanding)'
+        ],
+        examTip: 'فعل Have إذا جاء بمعنى يمتلك لا يأخذ ing (I have a car). أما إذا جاء بمعنى يتناول وجبة أو يقضي وقتاً فيأخذ ing عادي جداً: "I am having breakfast now".'
+      },
+      {
+        id: 'english-les-08',
+        title: 'المحاضرة 8: زمن الماضي البسيط (Past Simple) وتصريف الأفعال الشاذة',
+        duration: '32 دقيقة قراءة',
+        summary: 'التعرف على التصريف الثاني للفعل بالأفعال المنتظمة (d/ed/ied) والأفعال الشاذة الشائعة، وصياغة النفي بـ didn\'t والسؤال بـ Did.',
+        keyTakeaways: [
+          'يعبر عن حدث بدأ وانتهى تماماً في الماضي في زمن محدد',
+          'الأفعال المنتظمة تنتهي بـ ed (play -> played, watch -> watched)',
+          'الأفعال الشاذة (Irregular) لا تتبع قاعدة ويجب حفظها (go -> went, buy -> bought, write -> wrote)',
+          'النفي باستخدام didn\'t متبوعة بالمصدر المجرد: (I didn\'t go)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-08.jpg',
+        boardTitle: 'سبورة الشرح: الماضي البسيط وقائمة الأفعال الشاذة',
+        fullTranscription: [
+          '📌 1. تكوين الماضي البسيط:',
+          '• إثبات: Subject + Verb in Past (V2). مثال: He visited Alexandria last summer.',
+          '• نفي: Subject + didn\'t + Base Verb (V1). مثال: He didn\'t visit Alexandria.',
+          '• سؤال: Did + Subject + Base Verb? مثال: Did you watch the match yesterday?',
+          '📌 2. أشهر الأفعال الشاذة التي يجب حفظها:',
+          '• go -> went | see -> saw | take -> took | come -> came | make -> made',
+          '• eat -> ate | drink -> drank | sleep -> slept | find -> found | give -> gave',
+          '• buy -> bought | think -> thought | teach -> taught | bring -> brought',
+          '📌 3. الكلمات الدالة:',
+          'Yesterday (أمس) - Ago (منذ، تأتي في نهاية الجملة: 2 days ago) - Last (week, month, year) - In 2023 - Once upon a time.'
+        ],
+        examples: [
+          'إثبات منتظم: "Ahmed cleaned his room two hours ago."',
+          'إثبات شاذ: "Shakespeare wrote Hamlet hundreds of years ago."',
+          'سؤال: "Where did you go on your last vacation?"'
+        ],
+        examTip: 'دائماً تذكر: بعد Didn\'t و Did، يتحول الفعل إلى شكله الأول المجرد (Infinitive)! نقول "He didn\'t come" ولا يصح إطلاقاً قول "He didn\'t came".'
+      },
+      {
+        id: 'english-les-09',
+        title: 'المحاضرة 9: زمن المستقبل والتعبير عن التنبؤ والخطط (Will vs Going to vs Continuous)',
+        duration: '30 دقيقة قراءة',
+        summary: 'المقارنة الجوهرية بين أدوات التعبير عن المستقبل: القرارات اللحظية والوعود (Will)، مقابل النوايا والتنبؤ بدليل (Be going to)، والمواعيد المؤكدة.',
+        keyTakeaways: [
+          'Will + المصدر: للقرار اللحظي السريع، الوعود، عروض المساعدة، والتنبؤ بدون دليل مرئي',
+          'Be going to + المصدر: للخطط والنوايا المسبقة، والتنبؤ القائم على دليل حسي مرئي أمامي الآن',
+          'المضارع المستمر للمستقبل: للترتيبات المنتهية والمحجوزة (تذاكر، مواعيد طبية، حفلات)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-09.jpg',
+        boardTitle: 'سبورة الشرح: مقارنة أساليب التعبير عن المستقبل',
+        fullTranscription: [
+          '📌 1. حالات استخدام Will + Base Verb:',
+          '• القرار السريع (Quick Decision): "The phone is ringing. I will answer it."',
+          '• عرض المساعدة والطلب: "I will carry these bags for you."',
+          '• الوعد والتهديد: "I promise I will call you tonight."',
+          '• التنبؤ العام بدون دليل (مع كلمات think, hope, expect): "I think robots will do our chores in 2050."',
+          '📌 2. حالات استخدام Be Going To (am/is/are going to + verb):',
+          '• الخطط والنوايا المبيتة مسبقاً (Plan / Intention): "I am going to study medicine when I graduate."',
+          '• التنبؤ القائم على دليل حاضر (Prediction with evidence): "Look at that fast car! It is going to crash!" (الدليل سرعته الجنونية).',
+          '📌 3. المضارع المستمر للمستقبل (Arranged Future):',
+          'يستخدم عندما تكون الخطوات العملية اتُخذت بالفعل: "We are flying to London next Monday. (We have the tickets)."'
+        ],
+        examples: [
+          'قرار سريع: "I am hungry. I will make a sandwich."',
+          'تنبؤ بدليل: "Look at the dark clouds. It is going to rain."',
+          'ترتيب نهائي: "Dr. Tamer is holding a conference tomorrow at 10 AM."'
+        ],
+        examTip: 'في الامتحان، عندما تجد دليلاً ملموساً في الجملة (Look at..., Watch out!)، اختر فوراً Be going to وليس Will!'
+      },
+      {
+        id: 'english-les-10',
+        title: 'المحاضرة 10: الأفعال المساعدة الناقصة (Modal Verbs: Can, Could, Must, Should...)',
+        duration: '28 دقيقة قراءة',
+        summary: 'دراسة أفعال القدرة والنصيحة والإلزام والمنع والاحتمال، وقاعدتها الذهبية بأن يليها دائماً مصدر الفعل بدون to.',
+        keyTakeaways: [
+          'الأفعال الناقصة لا يضاف لها s مع المفرد ويتبعها المصدر المجرد دائماً',
+          'القدرة (Ability): Can في الحاضر، و Could في الماضي',
+          'الإلزام (Obligation): Must للإلزام الداخلي القوي والقانون، و Have to للإلزام الخارجي المفروض',
+          'النصيحة (Advice): Should و Shouldn\'t لتقديم التوجيه والنصح'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-10.jpg',
+        boardTitle: 'سبورة الشرح: خريطة الأفعال المساعدة Modal Verbs',
+        fullTranscription: [
+          '📌 1. خصائص الأفعال الناقصة (Modals):',
+          'لا تأخذ (s / ed / ing)، ونفيها بإضافة not بعدها مباشرة (Can\'t, Shouldn\'t, Mustn\'t)، ويأتي بعدها المصدر دائماً.',
+          '📌 2. خريطة الاستخدام:',
+          '• Can / Could: للقدرة والإذن والطلب المهذب: "Could you please pass the salt?"',
+          '• Should / Shouldn\'t: للنصيحة: "You should sleep early before the exam."',
+          '• Must: للإلزام والضرورة الصارمة وتذكير النفس: "I must study hard today."',
+          '• Mustn\'t: للتحريم والمنع القانوني (ممنوع وغير مسموح): "You mustn\'t park here."',
+          '• Don\'t have to: لعدم وجود داعٍ أو ضرورة (اختياري): "Tomorrow is a holiday, you don\'t have to wake up early."',
+          '• May / Might: للاحتمال والشك (May: 50% / Might: 25%): "It might rain tomorrow, take your umbrella."'
+        ],
+        examples: [
+          'نصيحة: "You should drink plenty of water during the hot summer."',
+          'تحريم مطلق: "Drivers mustn\'t exceed the speed limit."',
+          'عدم وجود إلزام: "You don\'t have to pay now; you can pay later."'
+        ],
+        examTip: 'الفرق القاتل بين Mustn\'t و Don\'t have to: كلمة Mustn\'t تعني خطر أو ممنوع بالقانون وستعاقب، بينما Don\'t have to تعني لست مضطراً والأمر متروك لاختيارك!'
+      },
+      {
+        id: 'english-les-11',
+        title: 'المحاضرة 11: أدوات الاستفهام وتكوين الأسئلة (Wh-Questions & Yes/No Questions)',
+        duration: '32 دقيقة قراءة',
+        summary: 'القاعدة الذهبية الخالدة لبناء السؤال بالإنجليزية، ودراسة أدوات الاستفهام التسعة مع مشتقات أداة How.',
+        keyTakeaways: [
+          'معادلة السؤال بأداة استفهام: [أداة الاستفهام] + [فعل مساعد] + [فاعل] + [فعل أساسي] + [مكملات]؟',
+          'أدوات الاستفهام الرئيسية: What (ماذا), Where (أين), When (متى), Why (لماذا), Who (من), Which (أيها)',
+          'مشتقات How: How much للكمية والسعر، How many للأعداد، How often لعدد مرات التكرار',
+          'السؤال عن الفاعل العاقل باستخدام Who لا يحتاج إلى فعل مساعد'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-11.jpg',
+        boardTitle: 'سبورة الشرح: قاعدة تكوين السؤال وأدوات الاستفهام',
+        fullTranscription: [
+          '📌 1. نوعا الأسئلة في اللغة الإنجليزية:',
+          '• Yes/No Question: يبدأ بفعل مساعد (Do, Does, Did, Is, Are, Have, Can...). مثال: "Do you like coffee? -> Yes, I do."',
+          '• Wh- Question: يبدأ بأداة استفهام لتطلب معلومة محددة.',
+          '📌 2. المعادلة الخماسية الذهبية للـ Wh-Question:',
+          '1. Wh-word (أداة الاستفهام)',
+          '2. Helping Verb (فعل مساعد: do, does, did, is, was, have, can)',
+          '3. Subject (الفاعل)',
+          '4. Main Verb (الفعل الأساسي في المصدر عادة)',
+          '5. Rest of sentence (بقية الجملة والـ ؟)',
+          '📌 3. معاني أدوات الاستفهام:',
+          '• Where: تسأل عن المكان (Where do you live?)',
+          '• When: تسأل عن الوقت (When does the movie start?)',
+          '• Why: تسأل عن السبب والإجابة بـ Because أو To (Why are you late?)',
+          '• Which: للاختيار بين أمرين (Which colour do you prefer?)',
+          '• How long: تسأل عن المدة الزمنية (How long have you lived here?)'
+        ],
+        examples: [
+          'تطبيق المعادلة: "What (أداة) did (مساعد) you (فاعل) eat (فعل أساسي) yesterday?"',
+          'مشتقات How: "How often do you go to the gym? -> Twice a week."',
+          'السؤال عن الفاعل: "Who invented the telephone? -> Alexander Graham Bell."'
+        ],
+        examTip: 'عند تكوين السؤال عن الفاعل العاقل بـ Who، لا تضع فعل مساعد do أو did! نقول "Who broke the window?" مباشرة ولا نقول "Who did break the window?".'
+      },
+      {
+        id: 'english-les-12',
+        title: 'المحاضرة 12: حروف الجر باللغة الإنجليزية (Prepositions of Time, Place & Movement)',
+        duration: '35 دقيقة قراءة',
+        summary: 'المخطط الهندسي الهرمي لقواعد In, On, At للزمان والمكان، وحروف الحركة والاتجاهات الشائعة.',
+        keyTakeaways: [
+          'هرم الزمان: In للفترات العامة الكبيرة، On للأيام والتواريخ المحددة، At للساعات الدقيقة والمناسبات',
+          'هرم المكان: In للمدن والدول والأماكن المغلقة، On للأسطح والشوارع ووسائل النقل العامة، At للنقاط والمواقع المحددة بدقة',
+          'حروف الحركة: Into (إلى الداخل), Onto (إلى فوق السطح), Through (خلال/عبر), Towards (نحو/باتجاه)'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-12.jpg',
+        boardTitle: 'سبورة الشرح: مثلث حروف الجر In - On - At',
+        fullTranscription: [
+          '📌 1. مثلث حروف جر الزمان (Prepositions of Time):',
+          '• IN (الأشمل والأوسع): القرون، السنوات (in 2026)، فصول السنة (in summer)، الشهور (in October)، وفترات النهار (in the morning, in the evening).',
+          '• ON (المستوى المتوسط): الأيام (on Friday)، التواريخ الكاملة (on 22nd October)، والمناسبات التي بها day (on my birthday, on New Year\'s Day).',
+          '• AT (النقطة المحددة الدقيقة): الساعات (at 7:00 AM)، أوقات الوجبات (at lunchtime)، ومصطلح (at night, at weekend).',
+          '📌 2. مثلث حروف جر المكان (Prepositions of Place):',
+          '• IN (المساحات الواسعة والمغلقة): in Egypt, in London, in the room, in the box, in the car.',
+          '• ON (الأسطح والشوارع): on the table, on the wall, on Oxford Street, on the bus, on the train.',
+          '• AT (النقطة المستهدفة المحددة): at the bus stop, at the entrance, at school, at university, at home.'
+        ],
+        examples: [
+          'زمان: "The final exam is in June (شهر), on Monday (يوم), at 9:00 AM (ساعة)."',
+          'مكان: "I live in Cairo, on Salah Salem Street, and I work at EduZone Headquarters."',
+          'حركة: "The train passed through the long tunnel."'
+        ],
+        examTip: 'وسائل المواصلات: إذا كنت تستطيع الوقوف والمشي بداخلها نستخدم ON (On the bus, on the train, on the plane). أما السيارات الصغيرة والتاكسي فنستخدم IN (In the car, in the taxi)!'
+      },
+      {
+        id: 'english-les-13',
+        title: 'المحاضرة 13: القواعد النحوية الشائعة وقواعد الترقيم (Grammar Rules & Punctuation)',
+        duration: '30 دقيقة قراءة',
+        summary: 'أشهر قواعد المقارنات والتفضيل (Comparatives & Superlatives)، والأسماء المعدودة وغير المعدودة، وقواعد علامات الترقيم الاحترافية.',
+        keyTakeaways: [
+          'مقارنة الصفات القصيرة: adj + er + than (Taller than, Faster than)',
+          'مقارنة الصفات الطويلة: more / less + adj + than (More comfortable than)',
+          'التفضيل: The + adj-est للصفات القصيرة، و The most / least للصفات الطويلة',
+          'علامات الترقيم: الحرف الكبير (Capital) في بداية كل جملة وأسماء الأعلام واللغات وأيام الأسبوع'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-13.jpg',
+        boardTitle: 'سبورة الشرح: قواعد النحو والمقارنات والترقيم',
+        fullTranscription: [
+          '📌 1. المقارنة بين اثنين (Comparative):',
+          '• الصفات القصيرة (ذات المقطع الواحد): نضيف er + than: Fast -> Faster than | High -> Higher than.',
+          '• إذا انتهت بساكن مسبوق بمتحرك نضاعف: Big -> Bigger than | Hot -> Hotter than.',
+          '• الصفات الطويلة (مقطعان أو أكثر): نضع more / less + adj + than: Expensive -> More expensive than.',
+          '📌 2. التفضيل الأعلى (Superlative):',
+          '• الصفات القصيرة: The + adj + est: The highest mountain, The fastest runner.',
+          '• الصفات الطويلة: The most / The least: The most wonderful sight.',
+          '• صفات شاذة تحفظ: Good -> Better than -> The best | Bad -> Worse than -> The worst.',
+          '📌 3. قواعد علامات الترقيم (Punctuation Marks):',
+          '• Capital Letter: الحرف الكبير في بداية الجمل، والضمير I في أي مكان، وأسماء الدول واللغات والشهور.',
+          '• Comma (الفاصلة): بعد أدوات الربط في بداية الجملة، وفي التعداد: (I bought apples, bananas, and oranges).'
+        ],
+        examples: [
+          'مقارنة: "The cheetah is faster than the lion."',
+          'تفضيل: "Mount Everest is the highest mountain in the world."',
+          'صفة شاذة: "Healthy food is better for you than fast food."'
+        ],
+        examTip: 'انتبه لكلمة than في المقارنة تكتب بـ a وليس بـ e! كلمة Then بحرف e تعني "ثم أو بعد ذلك".'
+      },
+      {
+        id: 'english-les-14',
+        title: 'المحاضرة 14: هندسة وبناء الجملة الإنجليزية (Sentence Structure & Types)',
+        duration: '28 دقيقة قراءة',
+        summary: 'الهيكل المعماري السليم للجملة الإنجليزية: الفاعل، الفعل، المفعول، والتفريق بين الجملة البسيطة والمركبة والمعقدة وروابط FANBOYS.',
+        keyTakeaways: [
+          'الترتيب الإجباري للجملة الخبرية: Subject (فاعل) + Verb (فعل) + Object (مفعول) + Complements (مكملات)',
+          'الجملة المركبة (Compound): تربط فكرتين مستقلتين باستخدام روابط FANBOYS: For, And, Nor, But, Or, Yet, So',
+          'الجملة المعقدة (Complex): جملة أساسية مربوطة بجملة تابعة باستخدام Although, Because, Since, If, When',
+          'تجنب البدء بالفعل في الجملة الخبرية الإنجليزية'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-14.jpg',
+        boardTitle: 'سبورة الشرح: هندسة الجملة الإنجليزية وتراكيبها',
+        fullTranscription: [
+          '📌 1. الترتيب الأساسي للجملة (SVO Pattern):',
+          'في العربية يمكن القول: "ذهب الطالب إلى المدرسة" (فعلية) أو "الطالب ذهب" (اسمية). أما في الإنجليزية فالترتيب ثابت ولا يجوز البدء بالفعل في الجملة الخبرية:',
+          'The student (Subject) + went (Verb) + to school (Prepositional Phrase).',
+          '📌 2. أنواع الجمل الثلاثة:',
+          '1. Simple Sentence (جملة بسيطة): تحتوي فاعلاً واحداً وفعلاً واحداً وتعبر عن فكرة تامة: "Omar loves mathematics."',
+          '2. Compound Sentence (جملة مركبة): جملتان كاملتان مربوطتان برابط تنسيقي مسبوق بفاصلة. كلمة FANBOYS تختصر الروابط السبعة:',
+          '• F: For (لأن) | A: And (و) | N: Nor (ولا) | B: But (لكن) | O: Or (أو) | Y: Yet (ومع ذلك) | S: So (لذلك).',
+          '3. Complex Sentence (جملة معقدة): جملة مستقلة + جملة تابعة (Dependent Clause): "Although it was cold, we went swimming."'
+        ],
+        examples: [
+          'Compound: "I wanted to buy the book, but I didn\'t have enough money."',
+          'Complex: "Because she studied diligently, she scored the highest grade."',
+          'جملة أمرية (الاستثناء الوحيد للبدء بالفعل): "Open the window, please."'
+        ],
+        examTip: 'لا تضع فاصلة قبل كلمة Because عندما تأتي في منتصف الجملة! الفاصلة توضع فقط إذا بدأت الجملة بـ Because أو Although في البداية.'
+      },
+      {
+        id: 'english-les-15',
+        title: 'المحاضرة 15: المفردات الذهبية وتعبيرات المحادثة الحياتية واليومية (Essential Vocabulary)',
+        duration: '35 دقيقة قراءة',
+        summary: 'أقوى 100 تعبير ومصطلح دارج في الحياة اليومية، مع قوالب التحدث للتعبير عن الرأي، طلب المساعدة، التسوق، والمقابلات الشخصية.',
+        keyTakeaways: [
+          'تعبيرات التعبير عن الرأي: In my view / As far as I can tell / To be completely honest',
+          'تعبيرات المحادثة الراقية: Would you mind helping me? / I truly appreciate your support',
+          'مصطلحات وتعبيرات لغوية شائعة (Idioms): Piece of cake (سهل جداً), Break a leg (بالتوفيق)',
+          'خطة الاستمرار: ممارسة القراءة 15 دقيقة يومياً وتكرار التعبيرات بصوت مسموع'
+        ],
+        imageUrl: '/courses/english-masterclass/lesson-15.jpg',
+        boardTitle: 'سبورة الشرح: قاموس المفردات الذهبية والمحادثات اليومية',
+        fullTranscription: [
+          '📌 1. تعبيرات الترحيب والتعارف الراقي:',
+          '• "Pleasure to meet you" = يسعدني جداً مقابلتك.',
+          '• "How have you been lately?" = كيف كانت أحوالك في الآونة الأخيرة؟',
+          '• "Long time no see!" = لم أرك منذ وقت طويل!',
+          '📌 2. قوالب التعبير عن الرأي والموافقة:',
+          '• "From my perspective, this is the most practical solution" = من وجهة نظري هذا الحل الأكثر عملية.',
+          '• "I couldn\'t agree more!" = أتفق معك تماماً لأقصى درجة.',
+          '• "You have a point, however..." = معك حق، ولكن...',
+          '📌 3. التعبيرات الاصطلاحية الشائعة (Idioms):',
+          '• "A piece of cake" = أمر في غاية السهولة (The exam was a piece of cake).',
+          '• "Hit the books" = يبدأ المذاكرة بجدية (Time to hit the books!).',
+          '• "Under the weather" = يشعر بوعكة صحية طفيفة (I feel a bit under the weather today).',
+          '📌 4. ختام الكورس والوصايا الذهبية لمنصة EduZone:',
+          'اللغة ممارسة وليست مجرد حفظ قواعد. راجع السبورات التأسيسية الـ 15 دورياً، وطبق ما تعلمته في جمل خاصة من واقع يومك لتصل للطلاقة التامة.'
+        ],
+        examples: [
+          'محادثة مطار: "Excuse me, which gate does the flight to Cairo depart from?"',
+          'طلب مساعدة مهذب: "Could you please give me a hand with this?"',
+          'شكر وتقدير: "I cannot thank you enough for your invaluable guidance."'
+        ],
+        examTip: 'في المحادثة والامتحانات، استخدام البدائل الراقية للكلمات البسيطة يرفع درجتك! بدلاً من تكرار "Very good" قل "Outstanding" أو "Superb"، وبدلاً من "Very bad" قل "Terrible".'
+      }
+    ]
+  },
+  {
     id: 'course-phys-camp',
     title: 'معسكر إنقاذ الفيزياء للثانوية العامة (8 ساعات مكثفة)',
     instructor: 'أ/ حسام خليل',

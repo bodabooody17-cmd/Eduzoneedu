@@ -17,7 +17,6 @@ import { ContactModal } from './components/ContactModal';
 import { SavedModal } from './components/SavedModal';
 import { NotificationCenter } from './components/NotificationCenter';
 import { Footer } from './components/Footer';
-import AdsterraAd from './components/AdsterraAd';
 import { AuthModal, StudentUser, UserRole } from './components/AuthModal';
 import './lib/firebase';
 import { StudentProfileModal } from './components/StudentProfileModal';
@@ -386,8 +385,7 @@ export default function App() {
 
   const handleWatchCourse = (course: VideoCourse) => {
     const track = trackStorageName || (myTrack?.name || '');
-    if (track && !isAllowedForTrack(`${course.title} ${course.category || ''}`, track)) {
-      alert(`هذه المادة غير متاحة لشعبتك: ${track}`);
+    if (course.track !== 'general' && course.id !== 'course-english-masterclass' && track && !isAllowedForTrack(`${course.title} ${course.category || ''}`, track)) {
       return;
     }
     requireAuth(`مشاهدة كورس ${course.title}`, () => {
@@ -503,7 +501,12 @@ export default function App() {
     const trackToTest = trackStorageName || (myTrack?.name || '');
     return VIDEO_COURSES.filter((course) => {
       // Strict Stream Filter
-      if (trackToTest && !isAllowedForTrack(`${course.title} ${course.category || ''}`, trackToTest)) {
+      if (
+        course.track !== 'general' &&
+        course.id !== 'course-english-masterclass' &&
+        trackToTest &&
+        !isAllowedForTrack(`${course.title} ${course.category || ''}`, trackToTest)
+      ) {
         return false;
       }
       if (activeTrack === 'university_courses' && course.track !== 'university') return false;
@@ -905,9 +908,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-
-                {/* Adsterra Fixed Banner */}
-                <AdsterraAd />
 
                 {/* Top Picks Preview */}
                 <div className="space-y-3 pt-2">
