@@ -184,10 +184,11 @@ export async function uploadAvatarToFirebaseStorage(
   const storagePath = `avatars/${fileName}`;
 
   try {
-    // Check if firebase storage is initialized on window or global
-    const win = window as any;
-    if (win.__firebaseStorage && win.__firebaseStorage.ref) {
-      const storageRef = win.__firebaseStorage.ref(storagePath);
+    const { ref: storageRefFn, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const { storage } = await import('../lib/firebase');
+
+    if (storage) {
+      const fileRef = storageRefFn(storage, storagePath);
       let uploadBlob: Blob;
 
       if (typeof base64OrBlob === 'string') {
@@ -197,7 +198,7 @@ export async function uploadAvatarToFirebaseStorage(
         uploadBlob = base64OrBlob;
       }
 
-      const snapshot = await storageRef.put(uploadBlob, {
+      const snapshot = await uploadBytes(fileRef, uploadBlob, {
         contentType: 'image/png',
         customMetadata: {
           studentName: studentName.trim(),
@@ -205,7 +206,7 @@ export async function uploadAvatarToFirebaseStorage(
         },
       });
 
-      const downloadUrl = await snapshot.ref.getDownloadURL();
+      const downloadUrl = await getDownloadURL(snapshot.ref);
       return {
         url: downloadUrl,
         storagePath,
@@ -213,7 +214,7 @@ export async function uploadAvatarToFirebaseStorage(
       };
     }
   } catch (err) {
-    console.warn('Direct Firebase Storage upload not active, using local persistent storage:', err);
+    console.warn('[Firebase Storage] Upload error, falling back to persistent local storage:', err);
   }
 
   // Persistent storage record fallback

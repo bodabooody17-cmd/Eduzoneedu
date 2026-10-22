@@ -329,9 +329,17 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
                 <span className="text-[10px] font-bold bg-yellow-400/20 text-yellow-300 border border-yellow-400/30 px-2 py-0.5 rounded-md">
                   {trackQuestions.length} سؤال متاح
                 </span>
+                {isSupervisor && (
+                  <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-400" />
+                    <span>حساب المشرف (مجاني 100%)</span>
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                60 سؤال مجاني لكل مادة مع تصحيح فوري وشرح وزاري
+                {isSupervisor
+                  ? 'صلاحيات المشرف العام: جميع الشعب ومواد الجمهورية مفتوحة بالكامل بدون قيود'
+                  : '60 سؤال مجاني لكل مادة مع تصحيح فوري وشرح وزاري'}
               </p>
             </div>
           </div>
@@ -360,11 +368,24 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
         {/* Automatic Track Indicator Banner (No manual track buttons) */}
         <div className="bg-slate-950 px-3.5 py-2 border-b border-slate-800 flex items-center justify-between text-xs shrink-0">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-yellow-400 shrink-0" />
-            <span className="text-slate-400 font-bold">شعبة الأسئلة المفعلة:</span>
-            <span className="bg-yellow-400/15 text-yellow-300 border border-yellow-400/30 px-2.5 py-0.5 rounded-lg font-black text-[11px]">
-              {studentTrack || 'المنهج العام'}
-            </span>
+            {isSupervisor ? (
+              <>
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-emerald-400 font-bold">وضع المشرف العام (مفتوح بالكامل):</span>
+                <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg font-black text-[11px] flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                  <span>جميع الشعب والأسئلة متاحة لك مجاناً ({trackQuestions.length} سؤال)</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <GraduationCap className="w-4 h-4 text-yellow-400 shrink-0" />
+                <span className="text-slate-400 font-bold">شعبة الأسئلة المفعلة:</span>
+                <span className="bg-yellow-400/15 text-yellow-300 border border-yellow-400/30 px-2.5 py-0.5 rounded-lg font-black text-[11px]">
+                  {studentTrack || 'المنهج العام'}
+                </span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2 text-[11px] text-slate-300 font-mono">
             <span className="text-emerald-400 font-bold">المحلول: {solvedCount}</span>
@@ -511,9 +532,16 @@ export const InteractiveQuizModal: React.FC<InteractiveQuizModalProps> = ({
                     سؤال {currentQuestion.num || currentIndex + 1} من {filteredQuestions.length}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  مجاني (1-60)
-                </span>
+                {isSupervisor ? (
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                    <Crown className="w-3 h-3 text-amber-400" />
+                    <span>مفتوح مجاناً للمشرف</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    مجاني (1-60)
+                  </span>
+                )}
               </div>
 
               {/* Question Text */}

@@ -19,6 +19,7 @@ import { NotificationCenter } from './components/NotificationCenter';
 import { Footer } from './components/Footer';
 import AdsterraAd from './components/AdsterraAd';
 import { AuthModal, StudentUser, UserRole } from './components/AuthModal';
+import './lib/firebase';
 import { StudentProfileModal } from './components/StudentProfileModal';
 import { SupervisorDashboardModal } from './components/SupervisorDashboardModal';
 import { CreatorProfileModal } from './components/CreatorProfileModal';
