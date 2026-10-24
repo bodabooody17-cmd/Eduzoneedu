@@ -28,7 +28,6 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 import { AndroidFrame } from './components/AndroidFrame';
 import { GoldenArabicBookletModal } from './components/GoldenArabicBookletModal';
 import { ChangeTrackModal } from './components/ChangeTrackModal';
-import { NotificationPromptBanner } from './components/NotificationPromptBanner';
 import { downloadSummaryAsDocument } from './utils/downloadHelper';
 import { getStudentProgress, StudentProgress } from './utils/gamification';
 import {
@@ -1437,13 +1436,6 @@ export default function App() {
         <ApkInstallModal
           isOpen={isApkModalOpen}
           onClose={() => setIsApkModalOpen(false)}
-        />
-
-        {/* Clean Arabic First-time Notification Prompt Banner */}
-        <NotificationPromptBanner
-          onActivated={() => {
-            setUnreadNotificationsCount((prev) => Math.max(1, prev));
-          }}
         />
       </div>
     </AndroidFrame>

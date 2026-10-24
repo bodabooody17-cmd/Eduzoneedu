@@ -62,8 +62,10 @@ export async function syncStudentToFirebase(
   let existingData: any = null;
 
   try {
-    const existingSnap = await getDoc(studentRef);
-    if (existingSnap.exists()) {
+    const getPromise = getDoc(studentRef);
+    const timeoutPromise = new Promise<null>((res) => setTimeout(() => res(null), 2500));
+    const existingSnap = (await Promise.race([getPromise, timeoutPromise])) as any;
+    if (existingSnap && typeof existingSnap.exists === 'function' && existingSnap.exists()) {
       existingData = existingSnap.data();
     }
   } catch (err) {
@@ -99,23 +101,38 @@ export async function syncStudentToFirebase(
   };
 
   try {
-    // Write to 'students' collection in Firestore
-    await setDoc(studentRef, {
-      ...studentData,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
+    // Write to 'students' collection in Firestore with timeout
+    const writePromise = setDoc(
+      studentRef,
+      {
+        ...studentData,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+    const writeTimeout = new Promise<void>((res) => setTimeout(() => res(), 3500));
+    await Promise.race([writePromise, writeTimeout]);
 
     // Also mirror to 'users' collection for broad compatibility
-    await setDoc(usersRef, {
-      ...studentData,
-      updatedAt: serverTimestamp(),
-    }, { merge: true }).catch(() => {});
+    setDoc(
+      usersRef,
+      {
+        ...studentData,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    ).catch(() => {});
+
+    // Cache locally immediately for zero-delay offline & fast lookup
+    cacheStudentLocally(studentData);
 
     console.log(`[Firebase Firestore] Student successfully synced: ${studentData.name} (${studentData.username})`);
   } catch (writeErr) {
     console.error('[Firebase Firestore] Failed to sync student document:', writeErr);
   }
 
+  // Ensure local cache has it even if Firestore write errored
+  cacheStudentLocally(studentData);
   return studentData;
 }
 
@@ -230,5 +247,49 @@ export async function deleteStudentFromFirebase(phoneOrId: string): Promise<bool
   } catch (err) {
     console.error('[Firebase] Failed to delete student:', err);
     return false;
+  }
+}
+
+/**
+  * Cache student locally for fast instant lookup
+  */
+export function cacheStudentLocally(student: FirebaseStudent): void {
+  try {
+    const raw = localStorage.getItem('eduzone_students_cache') || '[]';
+    const list: FirebaseStudent[] = JSON.parse(raw);
+    const existingIdx = list.findIndex((s) => s.id === student.id || s.phone === student.phone);
+    if (existingIdx >= 0) {
+      list[existingIdx] = student;
+    } else {
+      list.unshift(student);
+    }
+    localStorage.setItem('eduzone_students_cache', JSON.stringify(list));
+  } catch (e) {
+    console.warn('Could not cache student locally:', e);
+  }
+}
+
+/**
+ * Retrieve cached students list from localStorage
+ */
+export function getCachedStudentsLocally(): FirebaseStudent[] {
+  try {
+    const raw = localStorage.getItem('eduzone_students_cache') || '[]';
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Live Health Check for Firebase Firestore connection
+ */
+export async function checkFirebaseConnection(): Promise<{ ok: boolean; message: string; project: string }> {
+  try {
+    const pingRef = doc(db, '_connection_test', 'ping');
+    await setDoc(pingRef, { ping: Date.now(), timestamp: new Date().toISOString() }, { merge: true });
+    return { ok: true, message: 'متصل بنجاح مع قاعدة بيانات Firebase Firestore (eduzoneed)', project: 'eduzoneed' };
+  } catch (err: any) {
+    return { ok: false, message: err?.message || 'تعذر الوصول إلى Firestore', project: 'eduzoneed' };
   }
 }

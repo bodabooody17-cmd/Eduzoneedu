@@ -15,6 +15,8 @@ import {
   Lock,
   Check,
   ChevronDown,
+  Bell,
+  BellRing,
 } from 'lucide-react';
 import { awardPoints } from '../utils/gamification';
 import {
@@ -55,7 +57,20 @@ interface AuthModalProps {
 }
 
 // Strictly Egyptian mobile numbers: 11 digits starting with 010, 011, 012, 015
-const EGYPT_PHONE_REGEX = /^01[0-2,5]{1}[0-9]{8}$/;
+export const EGYPT_PHONE_REGEX = /^01[0-2,5]{1}[0-9]{8}$/;
+
+// Converts Eastern Arabic numerals ٠-٩ and strips international prefix +20/0020
+export function normalizeEgyptPhone(input: string): string {
+  if (!input) return '';
+  let s = input.replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+  s = s.replace(/\D/g, '');
+  if (s.startsWith('0020') && s.length >= 13) {
+    s = '0' + s.slice(4);
+  } else if (s.startsWith('20') && s.length >= 12) {
+    s = '0' + s.slice(2);
+  }
+  return s.slice(0, 11);
+}
 
 export const STUDENT_TRACKS = [
   {
@@ -142,6 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [error, setError] = useState('');
   const [isSelectingStage, setIsSelectingStage] = useState(false);
   const [isSelectingSubject, setIsSelectingSubject] = useState(false);
+  const [enableNotifications, setEnableNotifications] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,13 +175,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Enforce digits only and strictly max 11 digits
+  // Enforce digits only and strictly max 11 digits (with Arabic-Indic numerals conversion)
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawVal = e.target.value.replace(/\D/g, ''); // strip non-numeric
-    if (rawVal.length <= 11) {
-      setContact(rawVal);
-      if (error) setError('');
-    }
+    const rawVal = normalizeEgyptPhone(e.target.value);
+    setContact(rawVal);
+    if (error) setError('');
   };
 
   // Image Upload, Auto-Resize (> 2MB), 300x300 Circular Crop, Base64 & LocalStorage
@@ -217,16 +231,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   // Direct Submission: Validate, Upload to Firebase Storage avatars/ folder, and Login
+  // Direct Instant Submission: Validate, Local Persistence, Push opt-in & Non-blocking Background Firebase Sync
   const handleSubmitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      setError('يرجى إدخال الاسم بالكامل.');
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('يرجى إدخال اسمك بشكل صحيح (حرفين على الأقل).');
       return;
     }
 
     // Phone Validation: Strict Egyptian mobile regex ^01[0-2,5]{1}[0-9]{8}$
-    const cleanPhone = contact.trim();
+    const cleanPhone = normalizeEgyptPhone(contact);
     if (!cleanPhone || cleanPhone.length !== 11 || !EGYPT_PHONE_REGEX.test(cleanPhone)) {
       setError('رقم الهاتف غير صحيح. يجب أن يتكون من 11 رقماً ويبدأ بـ 010 أو 011 أو 012 أو 015.');
       return;
@@ -241,26 +257,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     setIsSubmitting(true);
+    setError('');
 
-    // 4- Upload to Firebase Storage in avatars/ folder with student name
-    let finalAvatarUrl = avatarUrl;
-    if (avatarUrl) {
-      try {
-        const uploadRes = await uploadAvatarToFirebaseStorage(name.trim(), avatarUrl);
-        if (uploadRes && uploadRes.url) {
-          finalAvatarUrl = uploadRes.url;
-        }
-      } catch (uploadErr) {
-        console.warn('Firebase Storage upload notification:', uploadErr);
-      }
-    }
-
-    const effectiveUsername = username.trim() || generateStudentUsername(name.trim(), cleanPhone);
+    const effectiveUsername = username.trim() || generateStudentUsername(trimmedName, cleanPhone);
+    const initialAvatarUrl = avatarUrl || undefined;
 
     // Success! Create User Object directly
     const newUser: StudentUser = {
       id: cleanPhone,
-      name: name.trim(),
+      name: trimmedName,
       username: effectiveUsername,
       contact: cleanPhone,
       phone: cleanPhone,
@@ -273,12 +278,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       theme: 'dark',
       loginDate: new Date().toLocaleDateString('ar-EG'),
       role,
-      avatarUrl: finalAvatarUrl || undefined,
+      avatarUrl: initialAvatarUrl,
       subjectSpecialty: role === 'teacher' ? subjectSpecialty : undefined,
       supervisorCode: role === 'supervisor' ? supervisorCode.trim() : undefined,
       xp: 50,
     };
 
+    // 1. Immediately persist locally (0ms lag, instant login experience)
     try {
       localStorage.setItem('eduzone_user', JSON.stringify(newUser));
       localStorage.setItem('eduzone_theme', 'dark');
@@ -287,36 +293,89 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         localStorage.setItem('userBranch', stage);
         window.dispatchEvent(new Event('eduzone_track_changed'));
       }
-      // Award login bonus points
       awardPoints(50, 'تسجيل دخول ناجح برقم الهاتف', 'login');
-
-      // 🔥 Real Firebase Firestore Synchronization
-      await syncStudentToFirebase(newUser, effectiveUsername, 50).catch((fireErr) => {
-        console.warn('[Firebase] student sync notice:', fireErr);
-      });
-
-      // Real tracking: record login log in backend (await db.loginLog.create)
-      fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: cleanPhone,
-          name: name.trim(),
-          username: effectiveUsername,
-          phone: cleanPhone,
-          stage: newUser.stage,
-          role,
-          avatarUrl: finalAvatarUrl,
-          xp: 50,
-        }),
-      }).catch((e) => console.log('Auth login log fallback:', e));
-    } catch (err) {
-      console.error(err);
+    } catch (localErr) {
+      console.warn('LocalStorage save notice:', localErr);
     }
 
-    setIsSubmitting(false);
-    setError('');
+    // 2. Push Notifications activation (if opted in)
+    if (enableNotifications) {
+      try {
+        if ('Notification' in window && Notification.permission !== 'granted') {
+          Notification.requestPermission().catch(() => {});
+        }
+        if ((window as any).OneSignal?.User?.PushSubscription) {
+          (window as any).OneSignal.User.PushSubscription.optIn().catch(() => {});
+        } else if ((window as any).OneSignalDeferred) {
+          (window as any).OneSignalDeferred.push(async function (OneSignal: any) {
+            try {
+              await OneSignal.User.PushSubscription.optIn();
+            } catch (err) {}
+          });
+        }
+        awardPoints(30, 'تفعيل الإشعارات الفورية للمنصة', 'bonus');
+        localStorage.setItem('eduzone_notif_enabled', 'true');
+        localStorage.setItem('eduzone_notif_banner_dismissed', 'true');
+      } catch (notifErr) {
+        console.warn('Push notification subscription error:', notifErr);
+      }
+    }
+
+    // 3. Immediately invoke onSuccess to close modal and start session!
     onSuccess(newUser);
+    setIsSubmitting(false);
+
+    // 4. Background non-blocking sync with Firebase Storage & Firestore
+    (async () => {
+      try {
+        let finalAvatarUrl = initialAvatarUrl;
+
+        // Upload avatar in background if data URI
+        if (avatarUrl && avatarUrl.startsWith('data:')) {
+          try {
+            const uploadPromise = uploadAvatarToFirebaseStorage(trimmedName, avatarUrl);
+            const timeoutPromise = new Promise<null>((res) => setTimeout(() => res(null), 3500));
+            const uploadRes: any = await Promise.race([uploadPromise, timeoutPromise]);
+            if (uploadRes && uploadRes.url) {
+              finalAvatarUrl = uploadRes.url;
+              newUser.avatarUrl = finalAvatarUrl;
+              try {
+                localStorage.setItem('eduzone_user', JSON.stringify(newUser));
+              } catch {}
+            }
+          } catch (storageErr) {
+            console.warn('[Firebase Storage] avatar background upload notice:', storageErr);
+          }
+        }
+
+        // Firestore sync with timeout
+        await syncStudentToFirebase(
+          { ...newUser, avatarUrl: finalAvatarUrl },
+          effectiveUsername,
+          50
+        ).catch((fireErr) => {
+          console.warn('[Firebase] student sync notice:', fireErr);
+        });
+
+        // Server-side login record log
+        fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: cleanPhone,
+            name: trimmedName,
+            username: effectiveUsername,
+            phone: cleanPhone,
+            stage: newUser.stage,
+            role,
+            avatarUrl: finalAvatarUrl,
+            xp: 50,
+          }),
+        }).catch(() => {});
+      } catch (bgErr) {
+        console.warn('[Firebase Background Sync] error:', bgErr);
+      }
+    })();
   };
 
   const isSupervisorCodeValid = supervisorCode.trim() === '1192004';
@@ -720,11 +779,82 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               )}
 
+              {/* 🔔 Attractive Push Notification Opt-in Card */}
+              <div
+                onClick={() => setEnableNotifications(!enableNotifications)}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${
+                  enableNotifications
+                    ? 'bg-gradient-to-r from-amber-500/15 via-slate-900 to-amber-500/10 border-amber-500/40 shadow-lg shadow-amber-500/5 ring-1 ring-amber-500/20'
+                    : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-400'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-sm ${
+                        enableNotifications
+                          ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      <Bell className={`w-5 h-5 ${enableNotifications ? 'animate-pulse' : ''}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-xs sm:text-sm font-black text-white">
+                          تفعيل الإشعارات الفورية
+                        </h4>
+                        <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-md shadow-xs">
+                          +30 XP
+                        </span>
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] text-slate-300 mt-0.5 line-clamp-1">
+                        تنبيهات فورية بالمذكرات وجداول الامتحانات فور نشرها
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <div className="shrink-0 mr-1">
+                    <div
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                        enableNotifications ? 'bg-amber-500' : 'bg-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`bg-slate-950 w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                          enableNotifications ? '-translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {enableNotifications && (
+                  <div className="mt-2.5 pt-2 border-t border-amber-500/20 flex items-center justify-between text-[10px] text-amber-300">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>سيصلك تنبيه فوري بأي مذكرة أو امتحان جديد على هاتفك</span>
+                    </span>
+                    <span className="font-bold text-amber-200 bg-amber-500/20 px-1.5 py-0.5 rounded">موصى به</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Prominent Error Alert above the button */}
+              {error && (
+                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-xs text-red-300 font-bold flex items-center gap-2 animate-fadeIn shadow-lg">
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               {/* Submit Button to Login directly without OTP */}
-              <div className="pt-2">
+              <div className="pt-1">
                 <button
                   type="submit"
-                  className={`w-full py-3 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 ${
+                  disabled={isSubmitting}
+                  className={`w-full py-3 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-75 disabled:cursor-wait ${
                     role === 'supervisor'
                       ? 'bg-amber-600 hover:bg-amber-700'
                       : role === 'teacher'
@@ -732,8 +862,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       : 'bg-indigo-600 hover:bg-indigo-700'
                   }`}
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>تسجيل الدخول والبدء مباشرة</span>
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>جاري الدخول والبدء مباشرة...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>تسجيل الدخول والبدء مباشرة</span>
+                    </>
+                  )}
                 </button>
               </div>
 

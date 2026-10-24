@@ -572,9 +572,10 @@ app.post(['/api/auth/login', '/api/auth/register', '/api/auth/log'], async (req:
       return res.status(400).json({ success: false, error: 'User details required' });
     }
 
+    const effectiveId = id || phone;
     const user = await db.user.create({
       data: {
-        id,
+        id: effectiveId,
         name: name || 'طالب جديد',
         username,
         phone,
