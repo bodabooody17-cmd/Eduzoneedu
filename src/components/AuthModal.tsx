@@ -24,12 +24,16 @@ import {
   clearTemporaryAvatar,
   uploadAvatarToFirebaseStorage,
 } from '../utils/avatarProcessor';
+import { syncStudentToFirebase, generateStudentUsername } from '../lib/studentFirebase';
 
 export type UserRole = 'student' | 'teacher' | 'supervisor';
 
 export interface StudentUser {
+  id?: string;
   name: string;
+  username?: string;
   contact: string; // Egyptian Phone Number (11 digits)
+  phone?: string;
   stage: string;
   theme: 'dark' | 'light';
   loginDate: string;
@@ -37,6 +41,7 @@ export interface StudentUser {
   avatarUrl?: string;
   subjectSpecialty?: string;
   supervisorCode?: string;
+  xp?: number;
 }
 
 interface AuthModalProps {
@@ -125,6 +130,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [role, setRole] = useState<UserRole>(initialRole);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [contact, setContact] = useState(''); // Phone number
   const [stage, setStage] = useState('ثانوية عامة (علمي علوم)');
   const [subjectSpecialty, setSubjectSpecialty] = useState('الفيزياء (علمي)');
@@ -249,10 +255,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
     }
 
+    const effectiveUsername = username.trim() || generateStudentUsername(name.trim(), cleanPhone);
+
     // Success! Create User Object directly
     const newUser: StudentUser = {
+      id: cleanPhone,
       name: name.trim(),
+      username: effectiveUsername,
       contact: cleanPhone,
+      phone: cleanPhone,
       stage:
         role === 'teacher'
           ? `معلم المادة (${subjectSpecialty})`
@@ -265,6 +276,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       avatarUrl: finalAvatarUrl || undefined,
       subjectSpecialty: role === 'teacher' ? subjectSpecialty : undefined,
       supervisorCode: role === 'supervisor' ? supervisorCode.trim() : undefined,
+      xp: 50,
     };
 
     try {
@@ -278,6 +290,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // Award login bonus points
       awardPoints(50, 'تسجيل دخول ناجح برقم الهاتف', 'login');
 
+      // 🔥 Real Firebase Firestore Synchronization
+      await syncStudentToFirebase(newUser, effectiveUsername, 50).catch((fireErr) => {
+        console.warn('[Firebase] student sync notice:', fireErr);
+      });
+
       // Real tracking: record login log in backend (await db.loginLog.create)
       fetch('/api/auth/login', {
         method: 'POST',
@@ -285,10 +302,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         body: JSON.stringify({
           id: cleanPhone,
           name: name.trim(),
+          username: effectiveUsername,
           phone: cleanPhone,
           stage: newUser.stage,
           role,
           avatarUrl: finalAvatarUrl,
+          xp: 50,
         }),
       }).catch((e) => console.log('Auth login log fallback:', e));
     } catch (err) {
@@ -608,7 +627,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </p>
               </div>
 
-              {/* 3. Stage Selector for Students (Custom Dark Modern Dialog - No native OS select) */}
+              {/* 3. Student Username / Handle (اليوزر) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-200">
+                    اسم المستخدم (اليوزر / المعرف):
+                  </label>
+                  <span className="text-[10px] text-amber-400 font-mono">
+                    يظهر في لوحة المشرف والشهادات
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder={
+                      name.trim()
+                        ? generateStudentUsername(name, contact)
+                        : '@username_1234'
+                    }
+                    className="w-full pr-9 pl-3 py-2.5 border rounded-xl text-xs font-mono font-bold bg-slate-950 border-slate-700 text-amber-300 placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition-colors text-left dir-ltr"
+                  />
+                  <Sparkles className="w-4 h-4 text-amber-400 absolute right-3 top-3" />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  يمكنك تركه فارغاً وسيتم إنشاؤه تلقائياً بصيغة فريدة من اسمك ورقمك.
+                </p>
+              </div>
+
+              {/* 4. Stage Selector for Students (Custom Dark Modern Dialog - No native OS select) */}
               {role === 'student' && (
                 <div>
                   <label className="block text-xs font-bold mb-1.5 text-slate-200">

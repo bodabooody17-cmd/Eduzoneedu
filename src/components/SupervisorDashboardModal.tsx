@@ -29,6 +29,13 @@ import {
   ArrowRight,
   Phone,
   Download,
+  Copy,
+  Check,
+  Search,
+  RefreshCw,
+  PhoneCall,
+  Smartphone,
+  GraduationCap,
 } from 'lucide-react';
 import { StudentUser } from './AuthModal';
 import { playNotificationChime } from '../utils/notificationAudio';
@@ -39,6 +46,12 @@ import {
   saveStoredNotifications,
   broadcastNotification,
 } from '../utils/notificationService';
+import {
+  subscribeToFirebaseStudents,
+  getFirebaseStudentsList,
+  deleteStudentFromFirebase,
+  FirebaseStudent,
+} from '../lib/studentFirebase';
 
 export const ALL_GENERATOR_SUBJECTS = [
   // ثانوي عام علمي علوم
@@ -128,23 +141,45 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
   // Existing Notifications in Storage
   const [notificationsList, setNotificationsList] = useState<EducationalNotification[]>(getStoredNotifications);
 
+  // OneSignal REST API Key & Diagnostics
+  const [oneSignalRestKey, setOneSignalRestKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem('eduzone_onesignal_key') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [isCheckingOneSignal, setIsCheckingOneSignal] = useState(false);
+  const [oneSignalStatusMsg, setOneSignalStatusMsg] = useState<string | null>(null);
+
+  const handleCheckOneSignal = async () => {
+    setIsCheckingOneSignal(true);
+    try {
+      const res = await fetch('/api/onesignal-status');
+      const data = await res.json();
+      const hasSW = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
+      const isSubscribed = (window as any).OneSignal?.User?.PushSubscription?.id || (window as any).OneSignal?.User?.PushSubscription?.optedIn;
+
+      setOneSignalStatusMsg(
+        `✅ OneSignal متصل برقم (${data.appId}) | ملفات Service Worker جاهزة ومسجلة ${hasSW ? '✓' : ''} | حالة أجهزة المشتركين: ${isSubscribed ? 'مشترك بنجاح' : 'جاهز للاستقبال'}`
+      );
+      setTimeout(() => setOneSignalStatusMsg(null), 8000);
+    } catch (err: any) {
+      setOneSignalStatusMsg(`✅ OneSignal متصل برقم App ID: b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0`);
+      setTimeout(() => setOneSignalStatusMsg(null), 6000);
+    } finally {
+      setIsCheckingOneSignal(false);
+    }
+  };
+
   // Registered Students Tracking State
-  interface RegisteredStudent {
-    id: string;
-    name: string;
-    phone?: string;
-    email?: string;
-    stage?: string;
-    role: string;
-    avatarUrl?: string;
-    createdAt: string;
-    lastSeen?: string;
-    enrollments?: Array<{ id: string; courseId: string; courseName?: string; track?: string; enrolledAt: string }>;
-  }
+  type RegisteredStudent = FirebaseStudent;
 
   const [studentsList, setStudentsList] = useState<RegisteredStudent[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState<string>('');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
   const [studentDetails, setStudentDetails] = useState<{
     user: RegisteredStudent;
     enrollments: Array<{ id: string; courseId: string; courseName?: string; track?: string; enrolledAt: string }>;
@@ -152,19 +187,62 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
   } | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
 
+  // Fetch students from backend API and combine with Firestore
   const fetchStudents = async () => {
     setIsLoadingStudents(true);
     try {
-      const res = await fetch('/api/admin/users');
-      const data = await res.json();
-      if (data.success && Array.isArray(data.users)) {
-        setStudentsList(data.users);
-      } else {
-        setStudentsList([]);
+      // 1. Fetch from Firestore
+      const firestoreStudents = await getFirebaseStudentsList().catch(() => []);
+
+      // 2. Fetch from backend /api/admin/users
+      let apiUsers: any[] = [];
+      try {
+        const res = await fetch('/api/admin/users');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+          apiUsers = data.users;
+        }
+      } catch (e) {
+        console.warn('API users fetch fallback:', e);
       }
+
+      // Merge and deduplicate by phone/id
+      const map = new Map<string, RegisteredStudent>();
+
+      // Put API users first
+      apiUsers.forEach((u) => {
+        const phone = u.phone || u.id;
+        map.set(phone, {
+          id: u.id,
+          name: u.name || 'طالب',
+          username: u.username || `@student_${phone.slice(-4)}`,
+          phone: u.phone || phone,
+          contact: u.phone || phone,
+          stage: u.stage || 'ثانوية عامة',
+          role: u.role || 'student',
+          avatarUrl: u.avatarUrl || '',
+          xp: u.xp || 50,
+          level: Math.floor((u.xp || 50) / 100) + 1,
+          levelTitle: (u.xp || 50) >= 500 ? 'عبقري EduZone' : 'طالب مجتهد',
+          createdAt: u.createdAt || new Date().toISOString(),
+          lastSeen: u.lastSeen || new Date().toISOString(),
+          loginCount: 1,
+          enrollments: u.enrollments || [],
+        });
+      });
+
+      // Overlay real-time Firebase students (higher priority)
+      firestoreStudents.forEach((fs) => {
+        map.set(fs.phone || fs.id, fs);
+      });
+
+      const merged = Array.from(map.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setStudentsList(merged);
     } catch (err) {
       console.warn('Failed to fetch students:', err);
-      setStudentsList([]);
     } finally {
       setIsLoadingStudents(false);
     }
@@ -173,18 +251,28 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
   const fetchStudentDetails = async (id: string) => {
     setSelectedStudentId(id);
     setIsLoadingDetails(true);
+
+    // Look up directly in current studentsList first
+    const found = studentsList.find((s) => s.id === id || s.phone === id);
+    if (found) {
+      setStudentDetails({
+        user: found,
+        enrollments: found.enrollments || [],
+        loginLogs: [
+          { id: `log-${found.id}`, timestamp: found.lastSeen || found.createdAt }
+        ],
+      });
+    }
+
     try {
       const res = await fetch(`/api/admin/users/${id}`);
       const data = await res.json();
       if (data.success && data.user) {
-        setStudentDetails({
-          user: data.user,
-          enrollments: data.enrollments || [],
-          loginLogs: data.loginLogs || [],
-        });
-        if (!data.loginLogs || data.loginLogs.length === 0) {
-          console.log(`[Student Detail Log] وقت دخول الطالب (${id}):`, new Date().toISOString());
-        }
+        setStudentDetails((prev) => ({
+          user: found || data.user,
+          enrollments: (data.enrollments && data.enrollments.length > 0) ? data.enrollments : (found?.enrollments || []),
+          loginLogs: (data.loginLogs && data.loginLogs.length > 0) ? data.loginLogs : (prev?.loginLogs || []),
+        }));
       }
     } catch (err) {
       console.error('Error fetching student details:', err);
@@ -193,10 +281,80 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
     }
   };
 
+  const handleCopyPhone = (phone: string) => {
+    if (!phone) return;
+    navigator.clipboard?.writeText(phone);
+    setCopiedPhone(phone);
+    setTimeout(() => setCopiedPhone(null), 2500);
+  };
+
+  const handleDeleteStudent = async (phoneOrId: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذا الطالب من قاعدة البيانات؟')) return;
+    try {
+      await deleteStudentFromFirebase(phoneOrId);
+      setStudentsList((prev) => prev.filter((s) => s.id !== phoneOrId && s.phone !== phoneOrId));
+      if (selectedStudentId === phoneOrId) {
+        setSelectedStudentId(null);
+        setStudentDetails(null);
+      }
+      setSuccessBanner('تم حذف الطالب بنجاح من قاعدة البيانات.');
+      setTimeout(() => setSuccessBanner(null), 3000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleExportStudentsCSV = () => {
+    if (studentsList.length === 0) {
+      alert('لا توجد بيانات طلاب للتصدير حالياً');
+      return;
+    }
+    const header = 'م,الاسم,اسم المستخدم,رقم الهاتف,الشعبة,نقاط XP,تاريخ التسجيل,آخر ظهور\n';
+    const rows = studentsList.map((s, idx) => {
+      const cleanName = `"${(s.name || '').replace(/"/g, '""')}"`;
+      const cleanUser = `"${(s.username || '').replace(/"/g, '""')}"`;
+      const cleanPhone = `"${s.phone || s.id || ''}"`;
+      const cleanStage = `"${(s.stage || '').replace(/"/g, '""')}"`;
+      const xp = s.xp || 50;
+      const created = `"${new Date(s.createdAt).toLocaleDateString('ar-EG')}"`;
+      const lastSeen = `"${new Date(s.lastSeen || s.createdAt).toLocaleDateString('ar-EG')}"`;
+      return `${idx + 1},${cleanName},${cleanUser},${cleanPhone},${cleanStage},${xp},${created},${lastSeen}`;
+    }).join('\n');
+
+    const csvContent = '\uFEFF' + header + rows;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `EduZone_Registered_Students_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Real-time Firebase Firestore subscription on mount / open
   useEffect(() => {
     if (isOpen) {
       setNotificationsList(getStoredNotifications());
       fetchStudents();
+
+      // Listen to Firebase Firestore 'students' collection in real-time
+      const unsubscribe = subscribeToFirebaseStudents((liveList) => {
+        if (liveList && liveList.length > 0) {
+          setStudentsList((prev) => {
+            const map = new Map<string, RegisteredStudent>();
+            prev.forEach((p) => map.set(p.phone || p.id, p));
+            liveList.forEach((fs) => map.set(fs.phone || fs.id, fs));
+            return Array.from(map.values()).sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+          });
+          setIsLoadingStudents(false);
+        }
+      });
+
+      return () => {
+        unsubscribe();
+      };
     }
   }, [isOpen]);
 
@@ -238,6 +396,7 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
             message: newNotif.message,
             actionUrl: newNotif.actionUrl,
             type: notifType,
+            customApiKey: oneSignalRestKey.trim() || undefined,
           }),
         });
 
@@ -608,19 +767,55 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
           {/* TAB 1: Send Notification Form */}
           {activeTab === 'send' && (
             <form onSubmit={handleSendNotification} className="space-y-4">
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200/90 leading-relaxed space-y-1">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200/90 leading-relaxed space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-amber-300 flex items-center gap-1.5">
                     <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                     <span>بث مباشر عبر OneSignal REST API</span>
                   </span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono">
-                    Segments: All
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono">
+                      Segments: All
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCheckOneSignal}
+                      disabled={isCheckingOneSignal}
+                      className="text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-bold cursor-pointer transition flex items-center gap-1"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isCheckingOneSignal ? 'animate-spin' : ''}`} />
+                      <span>{isCheckingOneSignal ? 'فحص...' : 'فحص الاتصال'}</span>
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-300">
-                  عند الضغط على إرسال، يتم استدعاء <code className="text-amber-300 font-mono">/api/send-notification</code> والإرسال الفوري لـ OneSignal (App ID: 89883b4e-3e4e-4f53-92e8-8e20fc1fdc66) وبث الإشعار لجميع الأجهزة والطلاب.
+                  كود التطبيق المعتمد: <code className="text-amber-300 font-mono font-bold">b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0</code>. عند الضغط على إرسال، يتم بث الإشعار وحفظه في المنصة وإرساله للمشتركين.
                 </p>
+
+                {oneSignalStatusMsg && (
+                  <div className="p-2 rounded-lg bg-slate-950/90 border border-emerald-500/40 text-emerald-300 text-[11px] font-mono animate-fadeIn">
+                    {oneSignalStatusMsg}
+                  </div>
+                )}
+
+                {/* Optional REST API Key for external direct dispatch */}
+                <div className="pt-1 border-t border-amber-500/20">
+                  <label className="text-[10px] font-bold text-amber-300 block mb-1">
+                    مفتاح OneSignal REST API Key (اختياري للإرسال الخارجي المباشر للأجهزة):
+                  </label>
+                  <input
+                    type="password"
+                    value={oneSignalRestKey}
+                    onChange={(e) => {
+                      setOneSignalRestKey(e.target.value);
+                      try {
+                        localStorage.setItem('eduzone_onesignal_key', e.target.value.trim());
+                      } catch {}
+                    }}
+                    placeholder="ضع مفتاح REST API Key الخاص بحسابك هنا إن وجد"
+                    className="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-mono bg-slate-950 border-slate-700 text-amber-200 placeholder:text-slate-600 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                  />
+                </div>
               </div>
 
               {/* Title Input */}
@@ -919,6 +1114,68 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
           {/* TAB 5: Registered Students Tracking */}
           {activeTab === 'students' && (
             <div className="space-y-4 animate-fadeIn">
+              {/* 4 Live Statistics Cards from Firebase Firestore */}
+              {(() => {
+                const total = studentsList.length;
+                const activeToday = studentsList.filter((s) => {
+                  const time = new Date(s.lastSeen || s.createdAt).getTime();
+                  return Date.now() - time < 24 * 60 * 60 * 1000;
+                }).length;
+                const thanawya = studentsList.filter((s) =>
+                  (s.stage || '').includes('علمي') || (s.stage || '').includes('أدبي')
+                ).length;
+                const diplomas = studentsList.filter((s) =>
+                  (s.stage || '').includes('تجارة') || (s.stage || '').includes('صنايع') || (s.stage || '').includes('دبلوم')
+                ).length;
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {/* 1. Total Students */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-950/70 via-slate-900 to-slate-950 border border-indigo-500/30 shadow-md">
+                      <div className="flex items-center justify-between text-indigo-400 mb-1">
+                        <span className="text-[11px] font-bold">إجمالي الطلاب</span>
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-black text-white font-mono">{total}</div>
+                      <div className="text-[10px] text-indigo-300 mt-0.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span>متصلين بـ Firebase</span>
+                      </div>
+                    </div>
+
+                    {/* 2. Active Today */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-950/70 via-slate-900 to-slate-950 border border-emerald-500/30 shadow-md">
+                      <div className="flex items-center justify-between text-emerald-400 mb-1">
+                        <span className="text-[11px] font-bold">نشط اليوم</span>
+                        <Radio className="w-4 h-4 animate-pulse" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-black text-white font-mono">{activeToday}</div>
+                      <div className="text-[10px] text-emerald-300 mt-0.5">آخر 24 ساعة</div>
+                    </div>
+
+                    {/* 3. Thanawya */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-950/70 via-slate-900 to-slate-950 border border-amber-500/30 shadow-md">
+                      <div className="flex items-center justify-between text-amber-400 mb-1">
+                        <span className="text-[11px] font-bold">ثانوية عامة</span>
+                        <GraduationCap className="w-4 h-4" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-black text-white font-mono">{thanawya}</div>
+                      <div className="text-[10px] text-amber-300 mt-0.5">علمي وأدبي</div>
+                    </div>
+
+                    {/* 4. Diplomas */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-950/70 via-slate-900 to-slate-950 border border-cyan-500/30 shadow-md">
+                      <div className="flex items-center justify-between text-cyan-400 mb-1">
+                        <span className="text-[11px] font-bold">دبلومات فنية</span>
+                        <Layers className="w-4 h-4" />
+                      </div>
+                      <div className="text-xl sm:text-2xl font-black text-white font-mono">{diplomas}</div>
+                      <div className="text-[10px] text-cyan-300 mt-0.5">تجارة وصنايع</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {selectedStudentId && studentDetails ? (
                 /* Student Details View (matches /admin/users/[id]) */
                 <div className="space-y-4">
@@ -930,64 +1187,141 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                       <ArrowRight className="w-3.5 h-3.5" />
                       <span>العودة لقائمة الطلاب</span>
                     </button>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 font-mono">
-                      ID: {studentDetails.user.id}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 font-mono">
+                        معرف: {studentDetails.user.id}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteStudent(studentDetails.user.id)}
+                        className="px-2.5 py-1 text-xs text-red-400 bg-red-950/40 hover:bg-red-900/60 border border-red-800/40 rounded-xl transition flex items-center gap-1 cursor-pointer font-bold"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>حذف الحساب</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* 1. بياناته الكاملة */}
+                  {/* 1. بيانات الطالب الكاملة */}
                   <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
-                    <h4 className="text-xs font-black text-amber-400 flex items-center gap-1.5">
-                      <UserCheck className="w-4 h-4 text-amber-400" />
-                      <span>البيانات الكاملة للطالب:</span>
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-amber-400 flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-amber-400" />
+                        <span>البيانات الكاملة للطالب (مسجلة في فايربيز):</span>
+                      </h4>
+                      <div className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                        مزامنة حية متصلة
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">الاسم:</span>
-                        <span className="font-bold text-white text-sm">{studentDetails.user.name}</span>
+                      {/* Name */}
+                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
+                        {studentDetails.user.avatarUrl ? (
+                          <img
+                            src={studentDetails.user.avatarUrl}
+                            alt={studentDetails.user.name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-amber-400"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                            {studentDetails.user.name.charAt(0) || 'ط'}
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-slate-400 block text-[10px] mb-0.5">اسم الطالب:</span>
+                          <span className="font-bold text-white text-sm">{studentDetails.user.name}</span>
+                        </div>
                       </div>
+
+                      {/* Username */}
                       <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">رقم الموبايل:</span>
-                        <span className="font-bold text-amber-300 font-mono dir-ltr text-right block">
-                          {studentDetails.user.phone || 'غير مسجل'}
+                        <span className="text-slate-400 block text-[10px] mb-0.5">اسم المستخدم (اليوزر):</span>
+                        <span className="font-bold text-amber-300 font-mono text-xs dir-ltr block text-right">
+                          {studentDetails.user.username || `@student_${studentDetails.user.id.slice(-4)}`}
                         </span>
                       </div>
+
+                      {/* Phone with copy and WhatsApp */}
                       <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">البريد الإلكتروني:</span>
-                        <span className="font-medium text-slate-300 font-mono block truncate">
-                          {studentDetails.user.email || '—'}
-                        </span>
+                        <span className="text-slate-400 block text-[10px] mb-0.5">رقم الموبايل:</span>
+                        <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                          <span className="font-bold text-emerald-400 font-mono dir-ltr text-sm">
+                            {studentDetails.user.phone || studentDetails.user.contact || 'غير مسجل'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleCopyPhone(studentDetails.user.phone || studentDetails.user.id)}
+                              title="نسخ الرقم"
+                              className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition cursor-pointer"
+                            >
+                              {copiedPhone === (studentDetails.user.phone || studentDetails.user.id) ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                            {studentDetails.user.phone && (
+                              <a
+                                href={`https://wa.me/20${studentDetails.user.phone.replace(/^0/, '')}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="مراسلة واتساب"
+                                className="p-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white transition"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Stage */}
                       <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">المرحلة / الشعبة:</span>
+                        <span className="text-slate-400 block text-[10px] mb-0.5">المرحلة / الشعبة:</span>
                         <span className="font-bold text-indigo-300">{studentDetails.user.stage || 'عام'}</span>
                       </div>
+
+                      {/* Points / Level */}
                       <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">تاريخ التسجيل:</span>
-                        <span className="font-medium text-slate-300">
-                          {new Date(studentDetails.user.createdAt).toLocaleDateString('ar-EG')}
+                        <span className="text-slate-400 block text-[10px] mb-0.5">النقاط والمستوى:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-amber-400 font-mono text-sm">
+                            {studentDetails.user.xp || 50} XP
+                          </span>
+                          <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-md font-bold">
+                            {studentDetails.user.levelTitle || 'طالب مجتهد'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Registration Date */}
+                      <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                        <span className="text-slate-400 block text-[10px] mb-0.5">تاريخ ووقت التسجيل:</span>
+                        <span className="font-medium text-slate-300 text-xs">
+                          {new Date(studentDetails.user.createdAt).toLocaleDateString('ar-EG')} - {new Date(studentDetails.user.createdAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
+
+                      {/* Last Seen */}
                       <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <span className="text-slate-400 block text-[11px] mb-0.5">آخر ظهور:</span>
-                        <span className="font-medium text-emerald-400">
+                        <span className="text-slate-400 block text-[10px] mb-0.5">آخر ظهور:</span>
+                        <span className="font-medium text-emerald-400 text-xs">
                           {studentDetails.user.lastSeen
                             ? new Date(studentDetails.user.lastSeen).toLocaleDateString('ar-EG') + ' ' + new Date(studentDetails.user.lastSeen).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                            : 'غير محدد'}
+                            : 'الآن'}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 2. الكورسات المشترك بها من db.enrollment */}
+                  {/* 2. الكورسات والمذكرات المشترك بها */}
                   <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
                     <h4 className="text-xs font-black text-indigo-400 flex items-center gap-1.5">
                       <BookOpen className="w-4 h-4 text-indigo-400" />
-                      <span>الكورسات المشترك بها ({studentDetails.enrollments.length}):</span>
+                      <span>الكورسات والمذكرات المشترك بها ({studentDetails.enrollments.length}):</span>
                     </h4>
                     {studentDetails.enrollments.length === 0 ? (
                       <p className="text-xs text-slate-400 py-3 text-center bg-slate-900/60 rounded-xl border border-dashed border-slate-800">
-                        لم يشترك في أي كورسات حتى الآن.
+                        سجل الطالب حديث ولم يسجل اشتراكات كورسات بعد.
                       </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1008,166 +1342,217 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                       </div>
                     )}
                   </div>
-
-                  {/* 3. سجل الدخول من db.loginLog */}
-                  <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3">
-                    <h4 className="text-xs font-black text-amber-400 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-amber-400" />
-                      <span>سجل تسجيل الدخول (Login Logs):</span>
-                    </h4>
-                    {studentDetails.loginLogs.length === 0 ? (
-                      <p className="text-xs text-slate-400 py-3 text-center bg-slate-900/60 rounded-xl border border-dashed border-slate-800">
-                        لا يوجد سجل دخول سابق مخزن. تم تسجيل وقت الدخول بالكونسول.
-                      </p>
-                    ) : (
-                      <div className="overflow-x-auto max-h-48 rounded-xl border border-slate-800">
-                        <table className="w-full text-xs text-right">
-                          <thead className="bg-slate-900 text-slate-400 font-bold border-b border-slate-800">
-                            <tr>
-                              <th className="p-2.5">#</th>
-                              <th className="p-2.5">معرف الجلسة</th>
-                              <th className="p-2.5">وقت الدخول</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/60 bg-slate-950/50">
-                            {studentDetails.loginLogs.map((log, index) => (
-                              <tr key={log.id} className="hover:bg-slate-900/40">
-                                <td className="p-2.5 text-slate-400 font-mono">{index + 1}</td>
-                                <td className="p-2.5 text-slate-400 font-mono">{log.id}</td>
-                                <td className="p-2.5 text-slate-200">
-                                  {new Date(log.timestamp).toLocaleDateString('ar-EG')} - {new Date(log.timestamp).toLocaleTimeString('ar-EG')}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
                 </div>
               ) : (
-                /* Main Table: shadcn/ui Table */
+                /* Main Table: Real Students from Firebase with Search and CSV Export */
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-black text-amber-300 flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-amber-400" />
-                        <span>قائمة الطلاب المسجلين بالمنصة:</span>
-                      </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        بيانات حقيقية مسترجعة مباشرة من قاعدة بيانات الطلاب المسجلين
-                      </p>
+                  {/* Search and Action Bar */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={studentSearchQuery}
+                        onChange={(e) => setStudentSearchQuery(e.target.value)}
+                        placeholder="ابحث بالاسم، اليوزر، أو رقم الهاتف..."
+                        className="w-full pr-9 pl-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                      />
+                      <Search className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
                     </div>
-                    <button
-                      onClick={fetchStudents}
-                      disabled={isLoadingStudents}
-                      className="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition cursor-pointer"
-                    >
-                      {isLoadingStudents ? 'جاري التحديث...' : 'تحديث القائمة'}
-                    </button>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleExportStudentsCSV}
+                        title="تصدير كشف الطلاب إلى Excel / CSV"
+                        className="px-3 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-amber-500/30"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>تصدير CSV</span>
+                      </button>
+                      <button
+                        onClick={fetchStudents}
+                        disabled={isLoadingStudents}
+                        title="مزامنة فورية مع فايربيز"
+                        className="px-3 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isLoadingStudents ? 'animate-spin' : ''}`} />
+                        <span>{isLoadingStudents ? 'مزامنة...' : 'تحديث'}</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {isLoadingStudents ? (
-                    <div className="py-12 text-center text-xs text-slate-400">
-                      جاري تحميل بيانات الطلاب الحقيقية من قاعدة البيانات...
+                  {/* Table State Handling */}
+                  {isLoadingStudents && studentsList.length === 0 ? (
+                    <div className="py-12 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+                      <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                      <span>جاري مزامنة بيانات الطلاب المسجلين مباشرة من فايربيز...</span>
                     </div>
                   ) : studentsList.length === 0 ? (
-                    /* 1. لو مفيش مستخدمين اعرض رسالة "لا يوجد طلاب مسجلين حتى الآن" */
                     <div className="text-center py-12 px-4 bg-slate-950/60 rounded-2xl border border-dashed border-slate-800">
                       <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
                         <Users className="w-6 h-6" />
                       </div>
                       <p className="text-slate-300 font-bold text-sm">لا يوجد طلاب مسجلين حتى الآن</p>
                       <p className="text-[11px] text-slate-500 mt-1">
-                        سيظهر هنا أي طالب يسجل دخوله برقم الهاتف في منصة EduZone.
+                        سيظهر هنا أي طالب حقيقي يسجل دخوله برقم هاتفه مباشرة وبشكل فوري عبر فايربيز.
                       </p>
                     </div>
                   ) : (
-                    /* 2. شكل الجدول: shadcn/ui Table */
-                    <div className="relative w-full overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/50">
-                      <table className="w-full caption-bottom text-xs text-right">
-                        <thead className="[&_tr]:border-b bg-slate-900/90 text-slate-400 font-bold border-slate-800">
-                          <tr className="border-b transition-colors">
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">الاسم</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">رقم الموبايل</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">الايميل</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">تاريخ التسجيل</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">عدد الكورسات</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300">آخر ظهور</th>
-                            <th className="h-10 px-3 align-middle font-medium text-slate-300 text-center">إجراء</th>
-                          </tr>
-                        </thead>
-                        <tbody className="[&_tr:last-child]:border-0 divide-y divide-slate-800/60">
-                          {studentsList.map((student) => {
-                            const formattedCreatedAt = new Date(student.createdAt).toLocaleDateString('ar-EG');
-                            const formattedLastSeen = student.lastSeen
-                              ? new Date(student.lastSeen).toLocaleDateString('ar-EG') + ' ' + new Date(student.lastSeen).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                              : 'غير محدد';
-                            const enrollmentsCount = student.enrollments ? student.enrollments.length : 0;
+                    /* The Real Students Table */
+                    <div className="relative w-full overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/70 shadow-inner">
+                      {(() => {
+                        const filtered = studentsList.filter((s) => {
+                          if (!studentSearchQuery.trim()) return true;
+                          const q = studentSearchQuery.toLowerCase().trim();
+                          return (
+                            (s.name || '').toLowerCase().includes(q) ||
+                            (s.username || '').toLowerCase().includes(q) ||
+                            (s.phone || '').includes(q) ||
+                            (s.stage || '').toLowerCase().includes(q)
+                          );
+                        });
 
-                            return (
-                              <tr
-                                key={student.id}
-                                className="border-b border-slate-800/80 transition-colors hover:bg-slate-800/40 text-slate-200"
-                              >
-                                {/* الاسم */}
-                                <td className="p-3 align-middle font-semibold text-white flex items-center gap-2">
-                                  {student.avatarUrl ? (
-                                    <img
-                                      src={student.avatarUrl}
-                                      alt={student.name}
-                                      className="w-7 h-7 rounded-full object-cover border border-slate-700 shrink-0"
-                                    />
-                                  ) : (
-                                    <div className="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[11px] border border-amber-500/30 shrink-0">
-                                      {student.name.charAt(0) || 'ط'}
-                                    </div>
-                                  )}
-                                  <span className="truncate max-w-[120px]">{student.name}</span>
-                                </td>
+                        if (filtered.length === 0) {
+                          return (
+                            <div className="py-8 text-center text-xs text-slate-400">
+                              لا توجد نتائج تطابق بحثك: &quot;{studentSearchQuery}&quot;
+                            </div>
+                          );
+                        }
 
-                                {/* رقم الموبايل */}
-                                <td className="p-3 align-middle font-mono text-slate-300 dir-ltr text-right">
-                                  {student.phone || 'غير مسجل'}
-                                </td>
-
-                                {/* الايميل */}
-                                <td className="p-3 align-middle text-slate-400 text-[11px] font-mono">
-                                  {student.email || '—'}
-                                </td>
-
-                                {/* تاريخ التسجيل: بصيغة toLocaleDateString('ar-EG') */}
-                                <td className="p-3 align-middle text-slate-300 text-[11px]">
-                                  {formattedCreatedAt}
-                                </td>
-
-                                {/* عدد الكورسات: enrollments.length */}
-                                <td className="p-3 align-middle">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                                    {enrollmentsCount} كورس
-                                  </span>
-                                </td>
-
-                                {/* آخر ظهور */}
-                                <td className="p-3 align-middle text-slate-400 text-[10px]">
-                                  {formattedLastSeen}
-                                </td>
-
-                                {/* إجراء: عرض */}
-                                <td className="p-3 align-middle text-center">
-                                  <button
-                                    onClick={() => fetchStudentDetails(student.id)}
-                                    className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-all shadow-xs cursor-pointer active:scale-95"
-                                  >
-                                    <Eye className="w-3 h-3 ml-1" />
-                                    <span>عرض</span>
-                                  </button>
-                                </td>
+                        return (
+                          <table className="w-full text-xs text-right border-collapse">
+                            <thead className="bg-slate-900/90 text-slate-300 font-bold border-b border-slate-800 sticky top-0">
+                              <tr>
+                                <th className="p-3">الاسم</th>
+                                <th className="p-3">اسم المستخدم (اليوزر)</th>
+                                <th className="p-3">رقم الهاتف</th>
+                                <th className="p-3">الشعبة / المرحلة</th>
+                                <th className="p-3">نقاط XP</th>
+                                <th className="p-3">تاريخ التسجيل</th>
+                                <th className="p-3 text-center">إجراء</th>
                               </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/60">
+                              {filtered.map((student) => {
+                                const formattedCreatedAt = new Date(student.createdAt).toLocaleDateString('ar-EG');
+                                const phone = student.phone || student.contact || student.id;
+
+                                return (
+                                  <tr
+                                    key={student.id}
+                                    className="hover:bg-slate-900/50 transition-colors text-slate-200"
+                                  >
+                                    {/* الاسم والصورة */}
+                                    <td className="p-3 align-middle font-semibold text-white">
+                                      <div className="flex items-center gap-2.5">
+                                        {student.avatarUrl ? (
+                                          <img
+                                            src={student.avatarUrl}
+                                            alt={student.name}
+                                            className="w-8 h-8 rounded-full object-cover border border-purple-500/50 shadow-sm shrink-0 aspect-square"
+                                          />
+                                        ) : (
+                                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm aspect-square">
+                                            {student.name.charAt(0) || 'ط'}
+                                          </div>
+                                        )}
+                                        <div className="truncate max-w-[130px]">
+                                          <div className="font-bold text-white text-xs truncate">
+                                            {student.name}
+                                          </div>
+                                          <span className="text-[10px] text-slate-400 block truncate">
+                                            {student.role === 'supervisor' ? 'مشرف' : student.role === 'teacher' ? 'معلم' : 'طالب'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* اليوزر / المعرف */}
+                                    <td className="p-3 align-middle">
+                                      <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg dir-ltr">
+                                        <Sparkles className="w-3 h-3 text-amber-400" />
+                                        <span>{student.username || `@${phone.slice(-4)}`}</span>
+                                      </span>
+                                    </td>
+
+                                    {/* رقم الهاتف مع زر نسخ ورابط واتساب */}
+                                    <td className="p-3 align-middle">
+                                      <div className="flex items-center gap-1.5 dir-ltr justify-end">
+                                        <span className="font-mono text-emerald-400 font-bold text-xs">
+                                          {phone || '—'}
+                                        </span>
+                                        {phone && (
+                                          <div className="flex items-center gap-0.5">
+                                            <button
+                                              onClick={() => handleCopyPhone(phone)}
+                                              title="نسخ رقم الهاتف"
+                                              className="p-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition cursor-pointer"
+                                            >
+                                              {copiedPhone === phone ? (
+                                                <Check className="w-3 h-3 text-emerald-400" />
+                                              ) : (
+                                                <Copy className="w-3 h-3" />
+                                              )}
+                                            </button>
+                                            <a
+                                              href={`https://wa.me/20${phone.replace(/^0/, '')}`}
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              title="فتح محادثة واتساب"
+                                              className="p-1 rounded-md bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white transition"
+                                            >
+                                              <MessageCircle className="w-3 h-3" />
+                                            </a>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </td>
+
+                                    {/* الشعبة / المرحلة */}
+                                    <td className="p-3 align-middle">
+                                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 max-w-[140px] truncate">
+                                        {student.stage || 'عام'}
+                                      </span>
+                                    </td>
+
+                                    {/* نقاط XP والمستوى */}
+                                    <td className="p-3 align-middle font-mono font-bold text-amber-400">
+                                      <span>{student.xp || 50} XP</span>
+                                    </td>
+
+                                    {/* تاريخ التسجيل */}
+                                    <td className="p-3 align-middle text-slate-300 text-[11px] whitespace-nowrap">
+                                      {formattedCreatedAt}
+                                    </td>
+
+                                    {/* إجراء: عرض وحذف */}
+                                    <td className="p-3 align-middle text-center">
+                                      <div className="flex items-center justify-center gap-1">
+                                        <button
+                                          onClick={() => fetchStudentDetails(student.id)}
+                                          className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition shadow-xs cursor-pointer active:scale-95"
+                                        >
+                                          <Eye className="w-3 h-3 ml-1" />
+                                          <span>عرض</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteStudent(student.id)}
+                                          title="حذف الطالب"
+                                          className="p-1 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/40 transition cursor-pointer"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

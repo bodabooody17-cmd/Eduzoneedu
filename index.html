@@ -69,10 +69,14 @@
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         try {
+          window.OneSignal = OneSignal;
           await OneSignal.init({
             appId: "b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0",
             allowLocalhostAsSecureOrigin: true,
+            serviceWorkerPath: "OneSignalSDKWorker.js",
+            serviceWorkerParam: { scope: "/" }
           });
+          console.log('[OneSignal] Initialized successfully with App ID: b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0');
         } catch (err) {
           console.warn('[OneSignal] Initialization skipped on current preview origin:', err?.message || err);
         }

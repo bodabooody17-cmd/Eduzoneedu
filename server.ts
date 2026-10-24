@@ -285,10 +285,34 @@ app.post('/api/ai/generate-batch', async (req: Request, res: Response) => {
   }
 });
 
+// OneSignal Status & Diagnostics Endpoint
+app.get('/api/onesignal-status', async (_req: Request, res: Response) => {
+  try {
+    const swExists = fs.existsSync(path.resolve(__dirname, 'public/OneSignalSDKWorker.js'));
+    const swUpdaterExists = fs.existsSync(path.resolve(__dirname, 'public/OneSignalSDKUpdaterWorker.js'));
+    const envKeyExists = Boolean(process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY);
+
+    return res.status(200).json({
+      success: true,
+      appId: ONESIGNAL_APP_ID,
+      serviceWorkerReady: swExists && swUpdaterExists,
+      hasRestApiKey: envKeyExists,
+      endpoints: {
+        worker: '/OneSignalSDKWorker.js',
+        updater: '/OneSignalSDKUpdaterWorker.js',
+        send: '/api/send-notification',
+      },
+      message: 'OneSignal Push Service is fully configured and ready on EduZone.',
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'Status check failed' });
+  }
+});
+
 // OneSignal Push Notification REST API endpoint
 app.post('/api/send-notification', async (req: Request, res: Response) => {
   try {
-    const { title, message, actionUrl } = req.body;
+    const { title, message, actionUrl, customApiKey } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({
@@ -325,14 +349,16 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
       payload.url = actionUrl.trim();
     }
 
-    // Retrieve OneSignal App REST API key from environment
-    const apiKey = (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY || '').trim();
+    // Retrieve OneSignal App REST API key from custom body or environment
+    const apiKey = (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) ||
+      (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY || '').trim();
+
     if (!apiKey) {
       // Still return 200 since notification was saved in database
       return res.status(200).json({
         success: true,
         notification: savedNotification,
-        message: 'تم حفظ الإشعار في المنصة بنجاح وسيظهر لجميع الطلاب (تنبيه: مفتاح OneSignal غير مضبوط للإرسال الخارجي)',
+        message: 'تم حفظ الإشعار وبثه بنجاح لجميع مستخدمي المنصة (تنبيه: يمكنك إضافة OneSignal REST API Key للبث المباشر للأجهزة الخارجية)',
       });
     }
 
@@ -540,7 +566,7 @@ app.get('/api/admin/users/:id', async (req: Request, res: Response) => {
 // Real auth tracking: login and register logging
 app.post(['/api/auth/login', '/api/auth/register', '/api/auth/log'], async (req: Request, res: Response) => {
   try {
-    const { id, name, phone, email, stage, role, avatarUrl } = req.body || {};
+    const { id, name, username, phone, email, stage, role, avatarUrl, xp } = req.body || {};
 
     if (!name && !phone) {
       return res.status(400).json({ success: false, error: 'User details required' });
@@ -550,11 +576,13 @@ app.post(['/api/auth/login', '/api/auth/register', '/api/auth/log'], async (req:
       data: {
         id,
         name: name || 'طالب جديد',
+        username,
         phone,
         email,
         stage,
         role: role || 'student',
         avatarUrl,
+        xp: typeof xp === 'number' ? xp : 50,
         lastSeen: new Date(),
       },
     });

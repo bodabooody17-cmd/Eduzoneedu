@@ -4,11 +4,13 @@ import path from 'path';
 export interface UserRecord {
   id: string;
   name: string;
+  username?: string;
   phone?: string;
   email?: string;
   stage?: string;
   role: string;
   avatarUrl?: string;
+  xp?: number;
   createdAt: string;
   updatedAt: string;
   lastSeen?: string;
@@ -139,11 +141,13 @@ export const db = {
       data: {
         id?: string;
         name: string;
+        username?: string;
         phone?: string;
         email?: string;
         stage?: string;
         role?: string;
         avatarUrl?: string;
+        xp?: number;
         createdAt?: Date | string;
         lastSeen?: Date | string;
       };
@@ -153,11 +157,13 @@ export const db = {
       const newUser: UserRecord = {
         id: args.data.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         name: args.data.name,
+        username: args.data.username || undefined,
         phone: args.data.phone || undefined,
         email: args.data.email || undefined,
         stage: args.data.stage || 'ثانوية عامة',
         role: args.data.role || 'student',
         avatarUrl: args.data.avatarUrl,
+        xp: args.data.xp ?? 50,
         createdAt:
           typeof args.data.createdAt === 'string'
             ? args.data.createdAt

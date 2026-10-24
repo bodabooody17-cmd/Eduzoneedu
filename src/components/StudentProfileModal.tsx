@@ -231,16 +231,22 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-3.5 pt-3.5 border-t border-white/10 grid grid-cols-2 gap-3 text-xs">
+                <div className="mt-3.5 pt-3.5 border-t border-white/10 grid grid-cols-3 gap-2 text-xs">
                   <div>
                     <span className="text-slate-400 block text-[10px]">
                       {isSupervisor ? 'الصلاحية:' : isTeacher ? 'المادة:' : 'المرحلة:'}
                     </span>
-                    <span className="font-bold text-slate-100">{currentUser.stage}</span>
+                    <span className="font-bold text-slate-100 truncate block">{currentUser.stage}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">اليوزر:</span>
+                    <span className="font-bold text-amber-300 font-mono text-[11px] truncate block dir-ltr text-right">
+                      {currentUser.username || `@student_${currentUser.contact.slice(-4)}`}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">رقم الهاتف:</span>
-                    <span className="font-bold text-slate-100 dir-ltr text-right truncate block font-mono">
+                    <span className="font-bold text-slate-100 dir-ltr text-right truncate block font-mono text-[11px]">
                       {currentUser.contact}
                     </span>
                   </div>
