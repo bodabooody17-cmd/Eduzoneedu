@@ -52,6 +52,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- OneSignal Web Push SDK Styles Suppression -->
+    <style>
+      /* Completely eliminate OneSignal default white slidedown popup */
+      #onesignal-slidedown-container,
+      #onesignal-slidedown-dialog,
+      .onesignal-slidedown-container,
+      .onesignal-slidedown-dialog,
+      #onesignal-bell-container,
+      .onesignal-bell-launcher {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        width: 0 !important;
+        height: 0 !important;
+        max-width: 0 !important;
+        max-height: 0 !important;
+        overflow: hidden !important;
+        z-index: -9999 !important;
+      }
+    </style>
     <!-- OneSignal Web Push SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
@@ -66,6 +90,26 @@
         }
       });
 
+      // Aggressively remove any OneSignal automatic slidedown prompt from the DOM
+      (function() {
+        function removeSlidedown() {
+          var el = document.getElementById('onesignal-slidedown-container') ||
+                   document.getElementById('onesignal-slidedown-dialog') ||
+                   document.querySelector('.onesignal-slidedown-container') ||
+                   document.querySelector('.onesignal-slidedown-dialog') ||
+                   document.getElementById('onesignal-bell-container');
+          if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        }
+        if (typeof window !== 'undefined' && typeof MutationObserver !== 'undefined') {
+          var observer = new MutationObserver(removeSlidedown);
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+          window.addEventListener('DOMContentLoaded', removeSlidedown);
+          window.addEventListener('load', removeSlidedown);
+        }
+      })();
+
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         try {
@@ -73,10 +117,23 @@
           await OneSignal.init({
             appId: "b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0",
             allowLocalhostAsSecureOrigin: true,
+            autoRegister: false,
+            autoResubscribe: false,
+            promptOptions: {
+              slidedown: {
+                prompts: []
+              }
+            },
             serviceWorkerPath: "OneSignalSDKWorker.js",
             serviceWorkerParam: { scope: "/" }
           });
-          console.log('[OneSignal] Initialized successfully with App ID: b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0');
+          // Explicitly cancel any pending slidedown prompt
+          try {
+            if (OneSignal.Slidedown && typeof OneSignal.Slidedown.cancel === 'function') {
+              OneSignal.Slidedown.cancel();
+            }
+          } catch (e) {}
+          console.log('[OneSignal] Initialized successfully with App ID: b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0 (Auto-prompt disabled)');
         } catch (err) {
           console.warn('[OneSignal] Initialization skipped on current preview origin:', err?.message || err);
         }
