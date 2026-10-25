@@ -192,10 +192,12 @@ export default function App() {
       try {
         let userId = 'all';
         try {
-          const stored = localStorage.getItem('eduzone_student_user');
+          const stored = localStorage.getItem('eduzone_user') || localStorage.getItem('eduzone_student_user');
           if (stored) {
             const user = JSON.parse(stored);
-            if (user?.contact) userId = user.contact;
+            if (user?.phone || user?.contact || user?.id) {
+              userId = user.phone || user.contact || user.id;
+            }
           }
         } catch {}
         const res = await fetch(`/api/notifications?userId=${encodeURIComponent(userId)}`);

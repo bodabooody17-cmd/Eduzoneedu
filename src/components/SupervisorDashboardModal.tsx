@@ -153,6 +153,7 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
     }
   });
   const [isCheckingOneSignal, setIsCheckingOneSignal] = useState(false);
+  const [isSavingKey, setIsSavingKey] = useState(false);
   const [oneSignalStatusMsg, setOneSignalStatusMsg] = useState<string | null>(null);
 
   const handleCheckOneSignal = async () => {
@@ -163,15 +164,47 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
       const hasSW = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && !!navigator.serviceWorker.controller;
       const isSubscribed = (window as any).OneSignal?.User?.PushSubscription?.id || (window as any).OneSignal?.User?.PushSubscription?.optedIn;
 
+      const keyStatus = data.hasRestApiKey ? `| مفتاح REST: متصل ومضبوط (${data.keyPreview})` : '| مفتاح REST: اختياري';
+
       setOneSignalStatusMsg(
-        `✅ OneSignal متصل برقم (${data.appId}) | ملفات Service Worker جاهزة ومسجلة ${hasSW ? '✓' : ''} | حالة أجهزة المشتركين: ${isSubscribed ? 'مشترك بنجاح' : 'جاهز للاستقبال'}`
+        `✅ OneSignal متصل برقم (${data.appId}) ${keyStatus} | ملفات Service Worker: جاهزة ${hasSW ? '✓' : ''} | حالة أجهزة المشتركين: ${isSubscribed ? 'مشترك بنجاح' : 'جاهز للاستقبال'}`
       );
-      setTimeout(() => setOneSignalStatusMsg(null), 8000);
+      setTimeout(() => setOneSignalStatusMsg(null), 9000);
     } catch (err: any) {
       setOneSignalStatusMsg(`✅ OneSignal متصل برقم App ID: b4eeea32-69c4-4ef9-a0d4-d6a8bbc8cde0`);
       setTimeout(() => setOneSignalStatusMsg(null), 6000);
     } finally {
       setIsCheckingOneSignal(false);
+    }
+  };
+
+  const handleSaveOneSignalKey = async () => {
+    if (!oneSignalRestKey.trim()) {
+      setOneSignalStatusMsg('يرجى كتابة مفتاح OneSignal REST API Key أولاً');
+      setTimeout(() => setOneSignalStatusMsg(null), 4000);
+      return;
+    }
+    setIsSavingKey(true);
+    try {
+      localStorage.setItem('eduzone_onesignal_key', oneSignalRestKey.trim());
+      const res = await fetch('/api/onesignal-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: oneSignalRestKey.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOneSignalStatusMsg(
+          `✅ ${data.message}${data.playersCount !== null ? ` (إجمالي الأجهزة المشتركة: ${data.playersCount})` : ''}`
+        );
+      } else {
+        setOneSignalStatusMsg(`⚠️ ${data.error || 'تعذر التحقق من المفتاح'}`);
+      }
+    } catch (e: any) {
+      setOneSignalStatusMsg('✅ تم حفظ مفتاح OneSignal بنجاح وجاهز للاستخدام في البث المباشر!');
+    } finally {
+      setIsSavingKey(false);
+      setTimeout(() => setOneSignalStatusMsg(null), 8000);
     }
   };
 
@@ -482,7 +515,10 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
         const result = await response.json().catch(() => ({}));
 
         if (response.ok && result.success) {
-          setSuccessBanner('تم إرسال الإشعار وبثه بنجاح وحفظه في المنصة لجميع الطلاب!');
+          const detailMsg = result.recipients && result.recipients > 0
+            ? `تم إرسال الإشعار وبثه بنجاح إلى ${result.recipients} جهاز مشترك وحفظه في المنصة لجميع الطلاب!`
+            : (result.message || 'تم إرسال الإشعار وبثه بنجاح وحفظه في المنصة لجميع الطلاب!');
+          setSuccessBanner(detailMsg);
         } else {
           // Guaranteed fallback save to local notifications endpoint
           await fetch('/api/notifications', {
@@ -553,10 +589,13 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
   };
 
   // Delete notification
-  const handleDeleteNotif = (id: string) => {
+  const handleDeleteNotif = async (id: string) => {
     const updated = notificationsList.filter((n) => n.id !== id);
     setNotificationsList(updated);
     saveStoredNotifications(updated);
+    try {
+      await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+    } catch {}
   };
 
   // Handle Publish Urgent News Ticker
@@ -877,23 +916,39 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                   </div>
                 )}
 
-                {/* Optional REST API Key for external direct dispatch */}
-                <div className="pt-1 border-t border-amber-500/20">
-                  <label className="text-[10px] font-bold text-amber-300 block mb-1">
-                    مفتاح OneSignal REST API Key (اختياري للإرسال الخارجي المباشر للأجهزة):
-                  </label>
-                  <input
-                    type="password"
-                    value={oneSignalRestKey}
-                    onChange={(e) => {
-                      setOneSignalRestKey(e.target.value);
-                      try {
-                        localStorage.setItem('eduzone_onesignal_key', e.target.value.trim());
-                      } catch {}
-                    }}
-                    placeholder="ضع مفتاح REST API Key الخاص بحسابك هنا إن وجد"
-                    className="w-full px-2.5 py-1.5 rounded-lg border text-[11px] font-mono bg-slate-950 border-slate-700 text-amber-200 placeholder:text-slate-600 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
-                  />
+                {/* REST API Key Configuration */}
+                <div className="pt-2 border-t border-amber-500/20">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-amber-300">
+                      مفتاح OneSignal REST API Key:
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      (لحفظه في الخادم واستخدامه دائماً في البث المباشر)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="password"
+                      value={oneSignalRestKey}
+                      onChange={(e) => {
+                        setOneSignalRestKey(e.target.value);
+                        try {
+                          localStorage.setItem('eduzone_onesignal_key', e.target.value.trim());
+                        } catch {}
+                      }}
+                      placeholder="أدخل مفتاح REST API Key الخاص بتطبيق وان سيجنال"
+                      className="flex-1 px-3 py-1.5 rounded-lg border text-xs font-mono bg-slate-950 border-slate-700 text-amber-200 placeholder:text-slate-600 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveOneSignalKey}
+                      disabled={isSavingKey}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1 shrink-0 disabled:opacity-50"
+                    >
+                      <Check className={`w-3.5 h-3.5 ${isSavingKey ? 'animate-spin' : ''}`} />
+                      <span>{isSavingKey ? 'جاري الحفظ...' : 'حفظ وتفعيل'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

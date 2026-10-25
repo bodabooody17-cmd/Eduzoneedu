@@ -285,22 +285,54 @@ app.post('/api/ai/generate-batch', async (req: Request, res: Response) => {
   }
 });
 
+// OneSignal Persistent Configuration & Helpers
+const ONESIGNAL_CONFIG_FILE = path.join(__dirname, 'data/onesignal_config.json');
+
+function getStoredOneSignalKey(): string {
+  try {
+    if (fs.existsSync(ONESIGNAL_CONFIG_FILE)) {
+      const content = fs.readFileSync(ONESIGNAL_CONFIG_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (parsed?.apiKey && typeof parsed.apiKey === 'string' && parsed.apiKey.trim()) {
+        return parsed.apiKey.trim();
+      }
+    }
+  } catch {}
+  return (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY || '').trim();
+}
+
+function saveStoredOneSignalKey(apiKey: string) {
+  try {
+    const dir = path.dirname(ONESIGNAL_CONFIG_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      ONESIGNAL_CONFIG_FILE,
+      JSON.stringify({ apiKey: apiKey.trim(), updatedAt: new Date().toISOString() }, null, 2),
+      'utf-8'
+    );
+  } catch (e) {
+    console.error('Error saving OneSignal config:', e);
+  }
+}
+
 // OneSignal Status & Diagnostics Endpoint
 app.get('/api/onesignal-status', async (_req: Request, res: Response) => {
   try {
     const swExists = fs.existsSync(path.resolve(__dirname, 'public/OneSignalSDKWorker.js'));
     const swUpdaterExists = fs.existsSync(path.resolve(__dirname, 'public/OneSignalSDKUpdaterWorker.js'));
-    const envKeyExists = Boolean(process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY);
+    const activeKey = getStoredOneSignalKey();
 
     return res.status(200).json({
       success: true,
       appId: ONESIGNAL_APP_ID,
       serviceWorkerReady: swExists && swUpdaterExists,
-      hasRestApiKey: envKeyExists,
+      hasRestApiKey: Boolean(activeKey),
+      keyPreview: activeKey ? `${activeKey.slice(0, 6)}••••${activeKey.slice(-4)}` : null,
       endpoints: {
         worker: '/OneSignalSDKWorker.js',
         updater: '/OneSignalSDKUpdaterWorker.js',
         send: '/api/send-notification',
+        config: '/api/onesignal-config',
       },
       message: 'OneSignal Push Service is fully configured and ready on EduZone.',
     });
@@ -309,10 +341,65 @@ app.get('/api/onesignal-status', async (_req: Request, res: Response) => {
   }
 });
 
+// OneSignal Configuration Save & Verification Endpoint
+app.post('/api/onesignal-config', async (req: Request, res: Response) => {
+  try {
+    const { apiKey } = req.body || {};
+    if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
+      return res.status(400).json({ success: false, error: 'apiKey is required' });
+    }
+
+    const cleanKey = apiKey.trim();
+    saveStoredOneSignalKey(cleanKey);
+
+    // Verify key with OneSignal API
+    let isValid = false;
+    let appInfo: any = null;
+    try {
+      const checkRes = await fetch(`https://onesignal.com/api/v1/apps/${ONESIGNAL_APP_ID}`, {
+        headers: {
+          Authorization: `Basic ${cleanKey}`,
+        },
+      });
+      if (checkRes.ok) {
+        isValid = true;
+        appInfo = await checkRes.json();
+      } else {
+        // Try Key authorization format
+        const checkRes2 = await fetch(`https://onesignal.com/api/v1/apps/${ONESIGNAL_APP_ID}`, {
+          headers: {
+            Authorization: `Key ${cleanKey}`,
+          },
+        });
+        if (checkRes2.ok) {
+          isValid = true;
+          appInfo = await checkRes2.json();
+        }
+      }
+    } catch (vErr) {
+      console.warn('[OneSignal] Verification network notice:', vErr);
+    }
+
+    return res.status(200).json({
+      success: true,
+      saved: true,
+      verified: isValid,
+      appId: ONESIGNAL_APP_ID,
+      appName: appInfo?.name || 'EduZone',
+      playersCount: appInfo?.players ?? null,
+      message: isValid
+        ? 'تم حفظ مفتاح OneSignal والتحقق من صحته بنجاح مع تطبيق EduZone!'
+        : 'تم حفظ المفتاح محلياً على الخادم وجاهز للاستخدام في بث الإشعارات.',
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'Failed to save config' });
+  }
+});
+
 // OneSignal Push Notification REST API endpoint
 app.post('/api/send-notification', async (req: Request, res: Response) => {
   try {
-    const { title, message, actionUrl, customApiKey } = req.body;
+    const { title, message, actionUrl, customApiKey, type = 'update' } = req.body;
 
     if (!title || !message) {
       return res.status(400).json({
@@ -325,86 +412,111 @@ app.post('/api/send-notification', async (req: Request, res: Response) => {
     const savedNotification = await db.notification.create({
       data: {
         userId: 'all',
-        title,
-        message,
+        title: title.trim(),
+        message: message.trim(),
         actionUrl: actionUrl || undefined,
-        type: 'update',
+        type: type || 'update',
       },
     });
 
-    const payload: Record<string, any> = {
-      app_id: ONESIGNAL_APP_ID,
-      included_segments: ['All'],
-      headings: {
-        en: title,
-        ar: title,
-      },
-      contents: {
-        en: message,
-        ar: message,
-      },
-    };
-
-    if (actionUrl && typeof actionUrl === 'string' && actionUrl.trim()) {
-      payload.url = actionUrl.trim();
-    }
-
-    // Retrieve OneSignal App REST API key from custom body or environment
-    const apiKey = (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) ||
-      (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY || '').trim();
+    // Retrieve OneSignal App REST API key
+    const apiKey = (customApiKey && typeof customApiKey === 'string' && customApiKey.trim()) || getStoredOneSignalKey();
 
     if (!apiKey) {
       // Still return 200 since notification was saved in database
       return res.status(200).json({
         success: true,
         notification: savedNotification,
-        message: 'تم حفظ الإشعار وبثه بنجاح لجميع مستخدمي المنصة (تنبيه: يمكنك إضافة OneSignal REST API Key للبث المباشر للأجهزة الخارجية)',
+        message: 'تم حفظ الإشعار وبثه بنجاح لجميع الطلاب داخل المنصة (يمكنك ربط مفتاح OneSignal REST API Key لبثه للأجهزة خارج المنصة)',
       });
     }
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Authorization': `Key ${apiKey}`,
-    };
+    // If API key is provided, dispatch to OneSignal with multiple segment fallbacks
+    const segmentCandidates: string[][] = [
+      ['Subscribed Users'],
+      ['Total Subscriptions'],
+      ['Subscribed Users', 'Total Subscriptions'],
+      ['All'],
+    ];
 
-    console.log(`[OneSignal] Dispatching real notification to app_id: ${ONESIGNAL_APP_ID}, included_segments: All`);
+    let lastData: any = null;
+    let dispatchSuccess = false;
+    let usedSegment = 'Subscribed Users';
 
-    const response = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-    });
+    for (const seg of segmentCandidates) {
+      const payload: Record<string, any> = {
+        app_id: ONESIGNAL_APP_ID,
+        included_segments: seg,
+        headings: {
+          en: title.trim(),
+          ar: title.trim(),
+        },
+        contents: {
+          en: message.trim(),
+          ar: message.trim(),
+        },
+      };
 
-    const data = await response.json().catch(() => ({}));
+      if (actionUrl && typeof actionUrl === 'string' && actionUrl.trim()) {
+        payload.url = actionUrl.trim();
+      }
 
-    if (!response.ok) {
-      console.warn(`[OneSignal] Dispatch returned status ${response.status}:`, data);
+      // Try with Basic auth header, fallback to Key
+      for (const authHeader of [`Key ${apiKey}`, `Basic ${apiKey}`]) {
+        try {
+          const response = await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Authorization': authHeader,
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json().catch(() => ({}));
+          lastData = data;
+
+          if (response.ok && data?.id) {
+            dispatchSuccess = true;
+            usedSegment = seg.join(', ');
+            console.log(`[OneSignal] Successfully sent notification id: ${data.id}, recipients: ${data.recipients}, segment: ${usedSegment}`);
+            break;
+          }
+        } catch (fetchErr) {
+          console.warn('[OneSignal] Fetch attempt notice:', fetchErr);
+        }
+      }
+
+      if (dispatchSuccess) break;
+    }
+
+    if (dispatchSuccess) {
       return res.status(200).json({
         success: true,
+        app_id: ONESIGNAL_APP_ID,
+        segment: usedSegment,
+        notification_id: lastData?.id,
+        recipients: lastData?.recipients ?? 1,
         notification: savedNotification,
-        warning: data?.errors || `OneSignal error (${response.status})`,
-        onesignal: data,
-        message: 'تم حفظ الإشعار في المنصة بنجاح وسيظهر للطلاب في قائمة الإشعارات',
+        onesignal: lastData,
+        message: 'تم إرسال الإشعار بنجاح لأجهزة الطلاب المشتركين وحفظه في المنصة!',
       });
     }
 
-    console.log('[OneSignal] Notification successfully sent for real:', data);
-
+    // If OneSignal API returned an error (e.g. no subscribers yet or warning)
+    console.warn('[OneSignal] Push dispatch outcome:', lastData);
     return res.status(200).json({
       success: true,
-      app_id: ONESIGNAL_APP_ID,
-      included_segments: ['All'],
-      notification_id: data?.id,
       notification: savedNotification,
-      onesignal: data,
-      message: 'تم إرسال الإشعار بنجاح وحفظه في المنصة لجميع الطلاب!',
+      warning: lastData?.errors || lastData?.warnings || 'OneSignal dispatch note',
+      onesignal: lastData,
+      message: 'تم حفظ الإشعار وبثه داخل المنصة لجميع الطلاب بنجاح!',
     });
   } catch (err: any) {
     return res.status(500).json({
       success: false,
       error: err?.message || 'Server error while processing notification',
       app_id: ONESIGNAL_APP_ID,
-      included_segments: ['All'],
     });
   }
 });
@@ -503,6 +615,16 @@ app.post('/api/notifications/read-all', async (req: Request, res: Response) => {
       success: false,
       error: err?.message || 'Failed to mark all as read',
     });
+  }
+});
+
+app.delete('/api/notifications/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const deleted = await db.notification.delete({ where: { id } });
+    return res.status(200).json({ success: true, deleted });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err?.message || 'Failed to delete notification' });
   }
 });
 

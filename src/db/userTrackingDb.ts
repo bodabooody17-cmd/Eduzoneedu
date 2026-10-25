@@ -389,6 +389,17 @@ export const db = {
       writeFile(NOTIFICATIONS_FILE, updated);
       return { count };
     },
+
+    async delete(args: { where: { id: string } }): Promise<boolean> {
+      const notifs = readFile<NotificationRecord[]>(NOTIFICATIONS_FILE, []);
+      const initialLen = notifs.length;
+      const filtered = notifs.filter((n) => n.id !== args.where.id);
+      if (filtered.length !== initialLen) {
+        writeFile(NOTIFICATIONS_FILE, filtered);
+        return true;
+      }
+      return false;
+    },
   },
 };
 
