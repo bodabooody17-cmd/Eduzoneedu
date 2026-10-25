@@ -52,6 +52,7 @@ import {
   deleteStudentFromFirebase,
   getCachedStudentsLocally,
   checkFirebaseConnection,
+  seedTestStudentToFirebase,
   FirebaseStudent,
 } from '../lib/studentFirebase';
 
@@ -191,6 +192,7 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
 
   const [isTestingFirebase, setIsTestingFirebase] = useState<boolean>(false);
   const [firebaseStatusMsg, setFirebaseStatusMsg] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState<boolean>(false);
 
   const handleTestFirebase = async () => {
     setIsTestingFirebase(true);
@@ -198,16 +200,30 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
       const res = await checkFirebaseConnection();
       setFirebaseStatusMsg(
         res.ok
-          ? `✅ ${res.message} | المزامنة الحية تعمل 100% مع قاعدة بيانات الطلاب (students)`
+          ? `✅ ${res.message}`
           : `⚠️ ملاحظة فايربيز: ${res.message}`
       );
       await fetchStudents();
-      setTimeout(() => setFirebaseStatusMsg(null), 8000);
+      setTimeout(() => setFirebaseStatusMsg(null), 10000);
     } catch (e: any) {
       setFirebaseStatusMsg('✅ متصل مع Firebase Firestore (مشروع eduzoneed)');
       setTimeout(() => setFirebaseStatusMsg(null), 6000);
     } finally {
       setIsTestingFirebase(false);
+    }
+  };
+
+  const handleSeedTestStudent = async () => {
+    setIsSeeding(true);
+    try {
+      const student = await seedTestStudentToFirebase();
+      setStudentsList((prev) => [student, ...prev.filter((p) => p.id !== student.id)]);
+      setSuccessBanner(`تمت إضافة الطالب التجريبي (${student.name} - ${student.phone}) وتوثيقه في Firebase فوراً!`);
+      setTimeout(() => setSuccessBanner(null), 5000);
+    } catch (e: any) {
+      alert(`تنبيه: ${e?.message || 'تعذر إضافة الطالب التجريبي'}`);
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -402,17 +418,17 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
 
       // Listen to Firebase Firestore 'students' collection in real-time
       const unsubscribe = subscribeToFirebaseStudents((liveList) => {
-        if (liveList && liveList.length > 0) {
-          setStudentsList((prev) => {
-            const map = new Map<string, RegisteredStudent>();
-            prev.forEach((p) => map.set(p.phone || p.id, p));
+        setStudentsList((prev) => {
+          const map = new Map<string, RegisteredStudent>();
+          prev.forEach((p) => map.set(p.phone || p.id, p));
+          if (Array.isArray(liveList)) {
             liveList.forEach((fs) => map.set(fs.phone || fs.id, fs));
-            return Array.from(map.values()).sort(
-              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-          });
-          setIsLoadingStudents(false);
-        }
+          }
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+        setIsLoadingStudents(false);
       });
 
       return () => {
@@ -1197,7 +1213,7 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
                   <button
                     type="button"
                     onClick={handleTestFirebase}
@@ -1206,6 +1222,16 @@ export const SupervisorDashboardModal: React.FC<SupervisorDashboardModalProps> =
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isTestingFirebase ? 'animate-spin' : ''}`} />
                     <span>{isTestingFirebase ? 'فحص...' : 'فحص الاتصال بفايربيز'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSeedTestStudent}
+                    disabled={isSeeding}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-60"
+                    title="إضافة طالب تجريبي للتأكد من كتابة وقراءة بيانات فايربيز"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${isSeeding ? 'animate-spin' : ''}`} />
+                    <span>{isSeeding ? 'جاري الإضافة...' : 'طالب تجريبي للاختبار'}</span>
                   </button>
                 </div>
               </div>

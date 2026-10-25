@@ -195,13 +195,14 @@ export function subscribeToFirebaseStudents(
 }
 
 /**
- * Fetch all students once from Firestore
+ * Fetch all students once from Firestore (checks both 'students' and 'users' collections)
  */
 export async function getFirebaseStudentsList(): Promise<FirebaseStudent[]> {
+  const map = new Map<string, FirebaseStudent>();
+
+  // 1. Fetch from 'students' collection
   try {
     const snapshot = await getDocs(collection(db, 'students'));
-    const list: FirebaseStudent[] = [];
-
     snapshot.forEach((docSnap) => {
       const d = docSnap.data();
       const phone = d.phone || d.contact || docSnap.id;
@@ -209,31 +210,66 @@ export async function getFirebaseStudentsList(): Promise<FirebaseStudent[]> {
       const username = d.username || generateStudentUsername(name, phone);
       const xp = typeof d.xp === 'number' ? d.xp : 50;
 
-      list.push({
+      map.set(phone, {
         id: docSnap.id,
         name,
         username,
         phone,
         contact: phone,
-        stage: d.stage || 'ثانوية عامة',
+        stage: d.stage || 'ثانوية عامة (علمي علوم)',
         role: d.role || 'student',
         avatarUrl: d.avatarUrl || '',
         xp,
         level: d.level || (Math.floor(xp / 100) + 1),
-        levelTitle: d.levelTitle || 'طالب مجتهد',
+        levelTitle: d.levelTitle || (xp >= 500 ? 'عبقري EduZone' : xp >= 200 ? 'طالب متميز' : 'طالب مجتهد'),
         createdAt: d.createdAt || new Date().toISOString(),
         lastSeen: d.lastSeen || new Date().toISOString(),
         loginCount: d.loginCount || 1,
         enrollments: Array.isArray(d.enrollments) ? d.enrollments : [],
       });
     });
-
-    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return list;
   } catch (err) {
-    console.warn('[Firebase] Error fetching students from Firestore:', err);
-    return [];
+    console.warn('[Firebase] Notice fetching students collection:', err);
   }
+
+  // 2. Fetch from 'users' collection to ensure 100% coverage
+  try {
+    const usersSnap = await getDocs(collection(db, 'users'));
+    usersSnap.forEach((docSnap) => {
+      const d = docSnap.data();
+      const phone = d.phone || d.contact || docSnap.id;
+      if (!map.has(phone)) {
+        const name = d.name || 'طالب';
+        const username = d.username || generateStudentUsername(name, phone);
+        const xp = typeof d.xp === 'number' ? d.xp : 50;
+
+        map.set(phone, {
+          id: docSnap.id,
+          name,
+          username,
+          phone,
+          contact: phone,
+          stage: d.stage || 'ثانوية عامة',
+          role: d.role || 'student',
+          avatarUrl: d.avatarUrl || '',
+          xp,
+          level: d.level || (Math.floor(xp / 100) + 1),
+          levelTitle: d.levelTitle || 'طالب مجتهد',
+          createdAt: d.createdAt || new Date().toISOString(),
+          lastSeen: d.lastSeen || new Date().toISOString(),
+          loginCount: d.loginCount || 1,
+          enrollments: Array.isArray(d.enrollments) ? d.enrollments : [],
+        });
+      }
+    });
+  } catch (err) {
+    console.warn('[Firebase] Notice fetching users collection:', err);
+  }
+
+  const list = Array.from(map.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  return list;
 }
 
 /**
@@ -284,12 +320,72 @@ export function getCachedStudentsLocally(): FirebaseStudent[] {
 /**
  * Live Health Check for Firebase Firestore connection
  */
-export async function checkFirebaseConnection(): Promise<{ ok: boolean; message: string; project: string }> {
+export async function checkFirebaseConnection(): Promise<{
+  ok: boolean;
+  message: string;
+  count: number;
+  project: string;
+}> {
   try {
+    // Test write ping
     const pingRef = doc(db, '_connection_test', 'ping');
     await setDoc(pingRef, { ping: Date.now(), timestamp: new Date().toISOString() }, { merge: true });
-    return { ok: true, message: 'متصل بنجاح مع قاعدة بيانات Firebase Firestore (eduzoneed)', project: 'eduzoneed' };
+
+    // Test reading students
+    const snap = await getDocs(collection(db, 'students'));
+    const count = snap.size;
+
+    return {
+      ok: true,
+      message: `متصل بنجاح 100% مع قاعدة بيانات Firebase Firestore (eduzoneed) — تم قراءة ${count} طالب مسجل من السحابة.`,
+      count,
+      project: 'eduzoneed',
+    };
   } catch (err: any) {
-    return { ok: false, message: err?.message || 'تعذر الوصول إلى Firestore', project: 'eduzoneed' };
+    const errMsg = err?.message || '';
+    if (errMsg.includes('permission-denied') || errMsg.includes('Missing or insufficient permissions')) {
+      return {
+        ok: false,
+        message: 'قاعدة البيانات مفعلة في فايربيز، ولكن قواعد الأمان (Firestore Rules) تحتاج إلى السماح: allow read, write: if true;',
+        count: 0,
+        project: 'eduzoneed',
+      };
+    }
+    return {
+      ok: false,
+      message: `حالة الاتصال بفايربيز: ${errMsg || 'جاري الاتصال بقاعدة البيانات'}`,
+      count: 0,
+      project: 'eduzoneed',
+    };
   }
+}
+
+/**
+ * Add a test student to verify Firestore write & real-time display
+ */
+export async function seedTestStudentToFirebase(): Promise<FirebaseStudent> {
+  const timestamp = Date.now().toString().slice(-4);
+  const testPhone = `0109${Math.floor(1000000 + Math.random() * 9000000)}`;
+  const testStudent: FirebaseStudent = {
+    id: testPhone,
+    name: `طالب تجريبي ${timestamp}`,
+    username: `@student_${timestamp}`,
+    phone: testPhone,
+    contact: testPhone,
+    stage: 'ثانوية عامة (علمي علوم)',
+    role: 'student',
+    avatarUrl: '',
+    xp: 150,
+    level: 2,
+    levelTitle: 'طالب متميز',
+    createdAt: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+    loginCount: 1,
+    enrollments: [],
+  };
+
+  await setDoc(doc(db, 'students', testStudent.id), testStudent, { merge: true });
+  await setDoc(doc(db, 'users', testStudent.id), testStudent, { merge: true }).catch(() => {});
+  cacheStudentLocally(testStudent);
+  return testStudent;
 }
